@@ -1,5 +1,5 @@
-from .ga_solver import Ga_Solver
+from .GRASP_solver import GRASP_Solver
 
 __all__ = [
-    'Ga_Solver'
+    'GRASP_Solver'
 ]
