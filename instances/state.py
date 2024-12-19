@@ -1,10 +1,14 @@
 import math
+from .problem import Problem
 
 class State():
     
-    def __init__(self, dict_admission, patients_per_room, nurses_shifts):
+    def __init__(self, dict_admission, nurses_shifts):
         self.dict_admission = dict_admission
-        self.patients_per_room = patients_per_room
         self.nurses_shifts = nurses_shifts
+    
+    def adding_matrix(self, matrix):
+        self.patients_per_room = matrix
+
         
         

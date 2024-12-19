@@ -16,6 +16,7 @@ class Patient():
     def encoding_agegroup(self, age_groups):
         mappatura = {elem: i for i, elem in enumerate(age_groups)}
         self.age_group = mappatura[self.age_group]
+        return self
         
     def define_entry_patient(self, date, id_room):
         # patient is added in id_room room

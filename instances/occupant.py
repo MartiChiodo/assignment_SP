@@ -14,3 +14,4 @@ class Occupant():
     def encoding_agegroup(self, age_groups):
         mappatura = {elem: i for i, elem in enumerate(age_groups)}
         self.age_group = mappatura[self.age_group]
+        return self

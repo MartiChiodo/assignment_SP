@@ -28,20 +28,27 @@ class Hospital():
     def encoding_room(self, id_room):
         return self.mappatura[id_room]
     
-    def creating_matrix_dayxroomxpatients(self, dict_acceptance):
+    def creating_matrix_dayxroomxpatients(self, dict_acceptance, problem):
         matrix = []
         for day in range(self.days):
-            matrix.append[[]]
+            matrix.append([])
             for room in range(self.n_rooms):
                 matrix[day].append([])
                 
-        # filling the list
+        # filling the list with the state
         for key, value in dict_acceptance.items():
-            id_data = value[1]-1
+            id_data = (value[1]-1) # id date of acceptance
             id_room = value[2]
             
-            matrix[id_data][id_room].append(key)
+            for i in range(problem.patients[key].length_of_stay):
+                matrix[min(id_data + i, self.days-1)][id_room].append(key)
+            
+        # adding the occupants
+        for key, value in problem.occupants.items():
+            d_data = 0 # id date of acceptance
+            id_room = value.room_id
+            
+            for i in range(value.length_of_stay):
+                matrix[min(id_data +i, self.days-1)][id_room].append(key)
             
         return matrix
-
-
