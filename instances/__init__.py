@@ -4,6 +4,7 @@ from .surgeon import Surgeon
 from .occupant import Occupant
 from .patient import Patient
 from .problem import Problem
+from .state import State
 
 __all__ = [
     'Hospital',
@@ -11,6 +12,7 @@ __all__ = [
     'Surgeon',
     'Occupant',
     'Patient',
-    'Problem'
+    'Problem',
+    'State'
     
 ]

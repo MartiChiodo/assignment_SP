@@ -11,9 +11,7 @@ class Hospital():
             self.capacity_per_room[i] = rooms_listofdict[i]['capacity']
         
         self.n_operating_theatres = len(ot_listofdict)
-        self.avalaibility = np.zeros((self.n_operating_theatres, days))
-        for i in range(self.n_operating_theatres):
-            self.avalaibility[i] = ot_listofdict[i]['availability']
+        self.avalaibilityOT = {elem['id']: elem['availability'] for elem in ot_listofdict}
         
         self.days = days
         
@@ -29,5 +27,21 @@ class Hospital():
         
     def encoding_room(self, id_room):
         return self.mappatura[id_room]
+    
+    def creating_matrix_dayxroomxpatients(self, dict_acceptance):
+        matrix = []
+        for day in range(self.days):
+            matrix.append[[]]
+            for room in range(self.n_rooms):
+                matrix[day].append([])
+                
+        # filling the list
+        for key, value in dict_acceptance.items():
+            id_data = value[1]-1
+            id_room = value[2]
+            
+            matrix[id_data][id_room].append(key)
+            
+        return matrix
 
 

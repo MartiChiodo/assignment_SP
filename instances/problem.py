@@ -1,10 +1,20 @@
 import math
+import numpy as np
+from .state import State
+from .patient import Patient
+from .occupant import Occupant
+from .hospital import Hospital
 
 class Problem():
     
-    def __init__(self):
-        self.constraints = []
-        self.variables = []
+    def __init__(self, surgeons, nurses, patients, occupants, hospital, weights):
+        self.surgeons = surgeons
+        self.nurses = nurses
+        self.patients = patients
+        self.occupants = occupants
+        self.hospital = hospital
+        self.state = []
+        self.weights = weights
         
         # DECISIONAL VARIABLES and COSTRAINTS
         #   - for each patients, the admission date (negative values for optional patient for postponed scheduling period)
@@ -21,15 +31,64 @@ class Problem():
         #   - a matrix (num_patients) x 2 in which the i-th row contains the info about in which OT the patient i is operated and in which day 
         #       I. verifying that the capacities about OTs and surgeons are satisfied
         
+        # HOW WE STORE THE DECISION VARIABLES
+        #   I. dict_admission -->  dictionary such that id_patient : [acceptance_date, ot_id, room]
+        #   III. nurses_shifts --> for each shift, we store in which room a nurse works (each col is a shift, each row is a nurse) (-1 if nurse is not working in that shift)
         
-    def add_variable(self, variable):
-        if len(variable) > 1:
-            for elem in variable:
-                self.variables.append(elem)
+        
+    def add_state(self, state):
+        self.state = state
+        
+    def verifying_costraints(self, state):
+        
+        flag = True  # true if state is feasible
+        
+        
+        
+        # COSTRAINTS ON ROOM
+        # no gender mix + compatible rooms
+        for day in state.patients_per_room:
+            for room in state.patients_per_room[day]:
+                lista_genderinaroom = []
+                for id_pat in state.patients_per_room[day][room]:
+                    patient = self.patients[id_pat]
+                    lista_genderinaroom.append(patient.gender)
+                    flag = room not in patient.incompatible_room_ids #check whether patient is in an incompatible room
+                flag = len(set(lista_genderinaroom)) <= 1 # checking that in a room there are people of same gender
+                
+                # cheking the costraints on capacities per room
+                flag = len(state.patients_per_room[day][room]) <= self.hospital.capacity_per_room[room]
+        
+        # COSTRAINTS ON SURGICAL PLANNING
+        dict_surgerytimepersurgeon = {elem['id'] : elem['max_surgery_time']  for elem in self.surgeons.values()}
+        dict_surgerytimeperot =  self.hospital.avalaibilityOT
+        for id_patient,list in state.dict_admission.items():
+            # checking if admission date is feasible    
+            if self.patients[id_patient]['mandatory']:
+                flag = list[1] <= self.patients[id_patient]['surgery_due_day']
+                flag = list[1] >=  self.patients[id_patient]['surgery_release_day'] 
             else:
-                self.variables.append(variable)
+                # for non mandatory we need to check that acceptance date is not further the last day
+                flag = list[1] <= self.hospital.days
+                flag = (list[1] >=  self.patients[id_patient]['surgery_release_day']) or  list[1] == -1
+                
+            # subctracting surgery time from dictionary
+            id_tempo = (list[1]-1) % 7 # % mod operator
+            id_surg = self.patients[id_patient]['surgeon_id']
+            
+            dict_surgerytimepersurgeon[id_surg][id_tempo] -= self.patients['surgery_duration'] 
+            flag = dict_surgerytimepersurgeon[id_surg][id_tempo] >= 0 # checkong that the time is still non-negative
+            dict_surgerytimeperot[list[0]][id_tempo] -= self.patients['surgery_duration'] 
+            flag =  dict_surgerytimeperot[list[0]][id_tempo] >= 0 # checkong that the time is still non-negative
+            
         
-    def add_costraint(self, costraint):
-        pass
+        return flag
+            
+
+            
+            
+            
+        
+
     
     

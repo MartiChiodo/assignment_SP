@@ -11,6 +11,7 @@ class GRASP_Solver():
         # II. scambiare le stanze tra le infermiere che lavorano nello stesso shift
         # III. for optional patients nel vcinito metti anche l'opzione di non operarlo
 
+        neighborhoods = []
         
         
         pass
