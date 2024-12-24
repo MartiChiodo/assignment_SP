@@ -21,7 +21,7 @@ weights = data['weights']
 print(hospital.occupation)
 p = Problem(surgeons, nurses, patients, occupants, hospital, weights, data['days'])
 
-dict_admission_0 = {'p0' : ['t0', 4, 0], 'p1': ['t0', 6, 1]} 
+dict_admission_0 = {'p0' : ['t0', 4, 0], 'p1': ['t0', 6, 1]}
 initial_state = State(dict_admission_0, [])
 
 print(p.verifying_costraints(initial_state))

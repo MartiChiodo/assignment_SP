@@ -43,8 +43,29 @@ class Problem():
     def verifying_costraints(self, state):
         
         flag = True  # true if state is feasible
+              
+        # CHECKING IF STATE IS AMMISSIBLE
+        # faccio un controllo sull'esistenza delle sale operatorie e delle stanze assegnate (non dovrebbe essere necessario perché si parte da una configurazione ammissibile e 
+        #   nella definizione dei vicini terremo cono di questa cosa, ma potrebbe essere utile se riscontriamo problemi)
+        for key, value in state.dict_admission.items():
+            if len(value) != 3:
+                raise ValueError('STATO NON AMMISSIBILE: la riga del pazione {key} ha una lunghezza diversa da 3.'.format(key=repr(key)))
+
+            id_OT = value[0]
+            id_ROOM = value[2]
+            
+            if id_OT not in self.hospital.avalaibilityOT.keys():
+                raise ValueError('STATO NON AMMISSIBILE: la sala operatoria {id_OT} non esiste.'.format(id_OT=repr(id_OT)))
+
+            
+            if id_ROOM not in range(self.hospital.n_rooms):
+                raise ValueError('STATO NON AMMISSIBILE: la stanza post-ricovero numero {id_ROOM} non esiste.'.format(id_ROOM=repr(id_ROOM)))
+            
         
+        # creating the useful matrix we wil largely use
         state.adding_matrix(self.hospital.creating_matrix_dayxroomxpatients(state.dict_admission, self))
+
+        
         
         # COSTRAINTS ON ROOM
         # no gender mix + compatible rooms
