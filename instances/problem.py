@@ -32,11 +32,9 @@ class Problem():
         
         # HOW WE STORE THE DECISION VARIABLES
         #   I. dict_admission -->  dictionary such that id_patient : [ot_id, surgery_date, room]
-        #   III. nurses_shifts --> for each shift, we store in which room a nurse works (each col is a shift, each row is a nurse) (-1 if nurse is not working in that shift)
-        
-        
-    def add_state(self, state):
-        self.state = state
+        #   II. nurses_shifts --> for each shift, we store in which room a nurse works (each col is a shift, each row is a nurse) (-1 if nurse is not working in that shift)
+        #       This structure is stored as a dictionary: key = nurse, value = array (3*days)x1 with the indication of in which rooms she is working (potenzialmente è un dizionario a di liste di liste
+        #         E.g: n0: [-1, [r0 r1], [r1], ... ],  n1 = [-1, -1, -1, ...], ...)
         
     
         
@@ -57,15 +55,56 @@ class Problem():
             if id_OT not in self.hospital.avalaibilityOT.keys():
                 raise ValueError('STATO NON AMMISSIBILE: la sala operatoria {id_OT} non esiste.'.format(id_OT=repr(id_OT)))
 
-            
             if id_ROOM not in range(self.hospital.n_rooms):
                 raise ValueError('STATO NON AMMISSIBILE: la stanza post-ricovero numero {id_ROOM} non esiste.'.format(id_ROOM=repr(id_ROOM)))
+            
+            
+        # AMMISIBILITY OF STATE BASED ON NURSES' SCHEDULING
+        # first I check If alla nurses have received a scheduling
+        len_state = len(state.nurses_shifts.keys())
+        len_expected = len(self.nurses.keys()) 
+        if len_state != len_expected :
+            raise ValueError('STATO NON AMMISSIBILE: nurses_shifts dovrebbe avere lunghezza {len_expected} ma ha lunghezza {len_state}.'.format(len_expected = repr(len_expected), len_state = repr(len_state)))
+        
+        # checking if all the nurses exist
+        for id_nurse in state.nurses_shifts.keys():
+            if id_nurse not in self.nurses.keys():
+                raise ValueError('STATO NON AMMISSIBILE: La nurse con id {id} non esiste.'.format(id=repr(id_nurse)))
+        
+        # for each week I check if the nurse should be working in the shift she has been assigned
+        for id_nurse, schedule in state.nurses_shifts.items():
+            # each element represents the whole scheduling of a single nurse --> schedule is a list of 3*days elements where -1 means she is not working.
+            # If she is working schedule contains a list of the rooms she has been assigned
+            
+            # first I create a binary array indicating whether the nurse should be working
+            should_work  = [False for _ in range(self.days * 3)]
+            nurse_priorscheduling = self.nurses[id_nurse].working_shift
+
+            for shift in nurse_priorscheduling:
+                id = shift['day'] *3 + shift['shift']          
+                should_work[id] = True
+                
+        
+            for id, rooms in enumerate(schedule):
+                # check if the nurse is working according to the apriori scheduling
+                if should_work[id] and rooms == -1:
+                    # case in which nurse should be working but she is not assigned to any room
+                    raise ValueError('STATO NON AMMISSIBILE: la nurse {id_nurse} dovrebbe lavorare nel turno {id}.'.format(id_nurse=repr(id_nurse), id=repr(id)))
+                elif not should_work[id] and rooms != -1:
+                    # case in which nurse should not be working but she is assigned to a room
+                    raise ValueError('STATO NON AMMISSIBILE: la nurse {id_nurse} non dovrebbe lavorare nel turno {id}.'.format(id_nurse=repr(id_nurse), id=repr(id)))
+               
+                # check if the nurse is assigned to an existing room
+                if rooms != -1:
+                    for room in rooms:
+                        if should_work[id] and room not in range(self.hospital.n_rooms):
+                            raise ValueError('STATO NON AMMISSIBILE: Nurse assegnata alla stanza inesistente {room}.'.format(room=repr(room)))
+                   
             
         
         # creating the useful matrix we wil largely use
         state.adding_matrix(self.hospital.creating_matrix_dayxroomxpatients(state.dict_admission, self))
 
-        
         
         # COSTRAINTS ON ROOM
         # no gender mix + compatible rooms
@@ -87,6 +126,7 @@ class Problem():
                 
                 # cheking the costraints on capacities per room
                 flag = len(state.patients_per_room[day][room]) <= self.hospital.capacity_per_room[room]
+        
         
         # COSTRAINTS ON SURGICAL PLANNING
         dict_surgerytimepersurgeon = {key : elem.max_surgery_time  for key,elem in self.surgeons.items()}
@@ -110,6 +150,11 @@ class Problem():
             dict_surgerytimeperot[list[0]][id_tempo] -= self.people[id_patient].surgery_duration
             flag =  dict_surgerytimeperot[list[0]][id_tempo] >= 0 # checkong that the time is still non-negative
             
+        
+        # CHECKING IF ALL OCCUPIED ROOM HAS AT LEAST ONE NURSE ASSIGNED
+        
+             
+
         
         return flag
             

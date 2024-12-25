@@ -22,7 +22,22 @@ print(hospital.occupation)
 p = Problem(surgeons, nurses, patients, occupants, hospital, weights, data['days'])
 
 dict_admission_0 = {'p0' : ['t0', 4, 0], 'p1': ['t0', 6, 1]}
-initial_state = State(dict_admission_0, [])
+
+
+# ciao Sophie qui ti faccio un piccolo spiegone del casotto che ho fatto.
+# La nostra matrice per salvarci le assegnazioni stanza - nurse è molto comoda per verificare i vincoli
+# ma un po' meno comoda da creare, perciò ho creato un po' di funzioni che ci facilitino il lavoro.
+# Nella classe nurse ho aggiunto un valore al dizionario 'working_shift' che ci permette di assegnare le stanze al turno dell'infermiera.
+# Per rendere la cosa più easy ho aggiunto anche una funzione che data una lista di stanze va a riempire opportunamente questo nuovo valore.
+# La matriciona comoda verrà poi calcolata mentre si crea la istanza dello Stato con una funzione apposita. Qui di seguito ti faccio vdere i passaggi chiave
+
+# I. per ogni infermiera definisco una lista con le stanze (ogni elemento corrisponde solo ad un turno in cui lavora)
+rooms_to_be_assigned = [[[0, 1], [2], [0]], [[2], [1], [2]], [[2, 1], [2], [1], [0], [0]], [[1,2], [2], [1], [0], [0,1], [2]], [[0,1], [2], [1], [1], [2], [2]], [[1], [2,1], [1], [1]], [[0], [1], [2]], [[2], [1], [2], [0], [0]], [[0], [0], [0], [1], [2]], [[1],  [2], [2], [1], [0]], [[1], [2], [2], [0]]]
+# II. aggiorno il dizionario delle infermiere
+{key: nurse.add_room_to_scheduling(rooms_to_be_assigned[cont]) for cont, (key, nurse) in enumerate(nurses.items())}
+# III. creating state (the matrix willbe created automatically)
+initial_state = State(dict_admission_0, nurses, p.days)
+
 
 print(p.verifying_costraints(initial_state))
 

@@ -17,6 +17,13 @@ class Nurse():
         self.working_shift = dict_nurse['working_shifts']
        
     
+    def add_room_to_scheduling(self, rooms):
+        # rooms is a list where each element represents the rooms she will cover in the corrisponding shift
+        # assume this list is correct
+        
+        for count,elem in enumerate(rooms):
+            self.working_shift[count]['rooms'] = elem
+    
         
         
 
