@@ -53,5 +53,7 @@ print(p.verifying_costraints(initial_state))
 
 # per ora la configurazione non va bene perché c'è qualche stanza scoperta ma ho sonno
 
+p.objective_function(initial_state)
+
 
 

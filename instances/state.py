@@ -7,6 +7,7 @@ class State():
         # nurses is the dictionare of all the nurses 
         self.dict_admission = dict_admission
         self.nurses_shifts = self.creating_nurses_shifts_matrix(nurses, days)
+        self.scheduling_OTs = self.defying_scheduling_OTs(dict_admission, days)
     
     def adding_matrix(self, matrix):
         self.patients_per_room = matrix
@@ -24,4 +25,22 @@ class State():
                 
             dict[id_nurse] = sched
         
+        return dict
+    
+    def defying_scheduling_OTs(self,dict_admission, days):
+        # I am creating a dictionary of list: at each OT I associate its scheduling 
+        dict = {}
+        
+        # first I need the keys
+        set_OTs = set()
+        for elem in dict_admission.values():
+            set_OTs.add(elem[0])
+            
+        for key in set_OTs:
+            dict[key] = [[] for _ in range(days)]
+            
+        # filling the structure
+        for key,elem in dict_admission.items():
+            dict[elem[0]][elem[1]].append(key)
+            
         return dict

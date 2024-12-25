@@ -192,11 +192,52 @@ class Problem():
             
 
     def objective_function(self, state):
+        # if a state is passed to this function we assume it is feasible
         value_obj = 0
         
-        # penalizing age groups
+        # penalizing age groups 
+        for day, prospetto_giornaliero in enumerate(state.patients_per_room):
+            for prospetto_room in prospetto_giornaliero:                
+                # prospetto_room is a list containing the ids of the people in the room
+                set_agegorups = set()
+                for pers in prospetto_room:
+                    set_agegorups.add(self.people[pers].age_group)
+
+            # penalizing when there is more than 1 age group
+            if len(set_agegorups) > 1: value_obj+= self.weights['room_mixed_age']
         
         
+        
+        # penalties for surgical delays + unscheduled patients
+        for id_pat, value in state.dict_admission.items():
+            if value[1] == -1: value_obj += self.weights['unscheduled_optional']
+            elif self.patients[id_pat].mandatory:
+                delay =  min([self.patients[id_pat].surgery_due_day - value[1],0])
+                value_obj += delay*self.weights['patient_delay']
+                
+                
+        # costs for openenig a OT + penalizing surgeon transfer
+        for id_OT, prospetto_per_OT in state.scheduling_OTs.items():
+            
+            list_set_ot_per_surgeon = {}
+            surgeon_ids = self.surgeons.keys()
+            for id_surg in surgeon_ids:
+                list_set_ot_per_surgeon[id_surg] = [set() for _ in range(self.days)]
+            
+            for day, prospetto_giornaliero in enumerate(prospetto_per_OT):
+                set_OTs = set()
+                # prospetto_giornaliero is a list containing all the ids of the patients who are operated in the OT in a certain day
+                for id_pat in prospetto_giornaliero:
+                    list_set_ot_per_surgeon[self.patients[id_pat].surgeon_id][day].add(id_OT)
+                    set_OTs.add(id_OT)
+                
+                # dding cost for opened OTs
+                value_obj += self.weights['open_operating_theater'] * len(set_OTs)
+            
+            # adding costs for surgeon transfers
+            for elem in list_set_ot_per_surgeon.values():
+                for insieme_OTS in elem:
+                    value_obj += self.weights['surgeon_transfer']* min([0, len(insieme_OTS)-1])
         
         
         return value_obj

@@ -37,19 +37,28 @@ class Hospital():
                 
         # filling the list with the state
         for key, value in dict_acceptance.items():
-            id_data = (value[1]-1) # id date of acceptance
-            id_room = value[2]
-            
-            for i in range(problem.patients[key].length_of_stay):
-                matrix[min(id_data + i, self.days-1)][id_room].append(key)
+            if value[1] != -1:
+                id_data = (value[1]) # id date of acceptance
+                id_room = value[2]
+                
+                if (id_data + problem.patients[key].length_of_stay -1) < self.days-1: 
+                    for i in range(problem.patients[key].length_of_stay):
+                        matrix[id_data+1][id_room].append(key)
+                else:
+                    for i in range(self.days - id_data):
+                        matrix[id_data + i][id_room].append(key)
             
         # adding the occupants
         for key, value in problem.occupants.items():
-            d_data = 0 # id date of acceptance
+            id_data = 0 # id date of acceptance
             id_room = value.room_id
             
-            for i in range(value.length_of_stay):
-                matrix[min(id_data +i, self.days-1)][id_room].append(key)
+            if (id_data + value.length_of_stay -1) < self.days-1: 
+                for i in range(value.length_of_stay):
+                    matrix[id_data + i][id_room].append(key)
+            else:
+                for i in range(self.days - id_data):
+                    matrix[id_data + i][id_room].append(key)
                 
         # matrix contains 3*days lists each containing n lists (n = number of rooms) where are stored the occupants of each room
             
