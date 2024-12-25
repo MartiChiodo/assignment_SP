@@ -152,13 +152,54 @@ class Problem():
             
         
         # CHECKING IF ALL OCCUPIED ROOM HAS AT LEAST ONE NURSE ASSIGNED
-        
-             
-
+        for day in range(self.days):
+            id_day = day*3
+            
+            # if someone is in the room in a certain day, I check if exactly a nurse is assigned to the room
+            for id_room, list in enumerate(state.patients_per_room[day]):
+                if state.patients_per_room[day][id_room] != []: 
+                    cont_earlysh = 0
+                    cont_latesh = 0
+                    cont_nightsh = 0
+                    
+                    for sched in state.nurses_shifts.values():
+                            # early shift
+                            id_shift = id_day + 0
+                            try:
+                                if id_room in sched[id_shift]: cont_earlysh+=1
+                            except:
+                                pass
+                            
+                            # late shift
+                            id_shift = id_day + 1
+                            try:
+                                 if id_room in sched[id_shift]: cont_latesh+=1
+                            except:
+                                pass
+                            
+                            # night shift
+                            id_shift = id_day + 2
+                            try:
+                                if id_room in sched[id_shift]: cont_nightsh+=1
+                            except:
+                                pass
+                
+                    # if only one of this cont is still 0  we have an unfeasible point
+                    if cont_earlysh != 1 or cont_latesh != 1 or cont_nightsh != 1:
+                        flag = False
         
         return flag
             
 
+    def objective_function(self, state):
+        value_obj = 0
+        
+        # penalizing age groups
+        
+        
+        
+        
+        return value_obj
             
             
             

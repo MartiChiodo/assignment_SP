@@ -50,5 +50,7 @@ class Hospital():
             
             for i in range(value.length_of_stay):
                 matrix[min(id_data +i, self.days-1)][id_room].append(key)
+                
+        # matrix contains 3*days lists each containing n lists (n = number of rooms) where are stored the occupants of each room
             
         return matrix

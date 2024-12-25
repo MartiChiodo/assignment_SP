@@ -32,7 +32,17 @@ dict_admission_0 = {'p0' : ['t0', 4, 0], 'p1': ['t0', 6, 1]}
 # La matriciona comoda verrà poi calcolata mentre si crea la istanza dello Stato con una funzione apposita. Qui di seguito ti faccio vdere i passaggi chiave
 
 # I. per ogni infermiera definisco una lista con le stanze (ogni elemento corrisponde solo ad un turno in cui lavora)
-rooms_to_be_assigned = [[[0, 1], [2], [0]], [[2], [1], [2]], [[2, 1], [2], [1], [0], [0]], [[1,2], [2], [1], [0], [0,1], [2]], [[0,1], [2], [1], [1], [2], [2]], [[1], [2,1], [1], [1]], [[0], [1], [2]], [[2], [1], [2], [0], [0]], [[0], [0], [0], [1], [2]], [[1],  [2], [2], [1], [0]], [[1], [2], [2], [0]]]
+rooms_to_be_assigned = [[[0, 1], [2], [0]], 
+                        [[2], [1], [2]], 
+                        [[2, 1], [2], [1], [0], [0]], 
+                        [[1,2], [2], [1], [0], [0,1], [2]], 
+                        [[0,1], [2], [1], [1], [2], [2]], 
+                        [[1], [2,1], [1], [1]], 
+                        [[0], [1], [2]],
+                        [[2], [1], [2], [0], [0]], 
+                        [[0], [0], [0], [1], [2]], 
+                        [[1],  [2], [2], [1], [0]], 
+                        [[1], [2], [2], [0]]]
 # II. aggiorno il dizionario delle infermiere
 {key: nurse.add_room_to_scheduling(rooms_to_be_assigned[cont]) for cont, (key, nurse) in enumerate(nurses.items())}
 # III. creating state (the matrix willbe created automatically)
@@ -40,6 +50,8 @@ initial_state = State(dict_admission_0, nurses, p.days)
 
 
 print(p.verifying_costraints(initial_state))
+
+# per ora la configurazione non va bene perché c'è qualche stanza scoperta ma ho sonno
 
 
 
