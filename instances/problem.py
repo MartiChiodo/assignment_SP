@@ -240,8 +240,45 @@ class Problem():
                     value_obj += self.weights['surgeon_transfer']* min([0, len(insieme_OTS)-1])
                     
                     
-        # costs of assigning a nurse with not enough skill level to a room
+        # costs of assigning a nurse with not enough skill level to a room + workload + continuity of care
+        set_of_nurse_par_people = {}
+        for id_peo in self.people.keys():
+            set_of_nurse_par_people[id_peo] = set()
         
+        for id_nurse, sched in state.nurses_shifts.items():
+            for id_shift, room_vec in enumerate(sched):
+                if room_vec != -1:
+                    sum_workload = 0
+                    for room in room_vec:
+                        # id_shift = day*3 + {0;1;2} --> day = 1/3 * id_shift + 1/3*{0;1;2} in [1/3*id_shift; 1/3 *id_shift + 2/3]
+                        id_pat_vec = state.patients_per_room[int(id_shift/3)][room]
+                        for id_pat in id_pat_vec:
+                            
+                            set_of_nurse_par_people[id_peo].add(id_nurse)
+                            
+                            if id_pat in self.patients.keys():
+                                # id_shift = data_accept*3 + x --> x = id_shift - data_accept*3
+                                skill_min_required = self.patients[id_pat].skill_level_required[id_shift - state.dict_admission[id_pat][1]*3]
+                                sum_workload += self.patients[id_pat].workload_produced[id_shift - state.dict_admission[id_pat][1]*3]
+                            else:
+                                skill_min_required = self.occupants[id_pat].skill_level_required[id_shift]
+                                sum_workload += self.occupants[id_pat].workload_produced[id_shift]
+                            
+                                
+                            value_obj += self.weights['room_nurse_skill'] * max(0, skill_min_required - self.nurses[id_nurse].skill_level)
+                            
+                    # end for on room_vec
+                    # I have to dermine the max_load for a nurse by searching it in the dictionary
+                    list_shift = self.nurses[id_nurse].working_shift
+                    for elem in list_shift:
+                        idx_x = 3*elem['day'] + elem['shift']
+                        if idx_x == id_shift: max_workload = elem['max_load']
+                        
+                    value_obj += self.weights['nurse_eccessive_workload'] * max(0, sum_workload - max_workload)
+                                
+            
+        for set_of_nurses in set_of_nurse_par_people:
+            value_obj += len(set_of_nurses)
         
         return value_obj
             

@@ -18,7 +18,6 @@ occupants = { key: elem.encoding_agegroup(data['age_groups']) for key,elem in oc
 surgeons = {elem['id']: Surgeon(elem) for elem in data['surgeons']}
 weights = data['weights']
 
-print(hospital.occupation)
 p = Problem(surgeons, nurses, patients, occupants, hospital, weights, data['days'])
 
 dict_admission_0 = {'p0' : ['t0', 4, 0], 'p1': ['t0', 6, 1]}
@@ -37,7 +36,7 @@ rooms_to_be_assigned = [[[0, 1], [2], [0]],
                         [[2, 1], [2], [1], [0], [0]], 
                         [[1,2], [2], [1], [0], [0,1], [2]], 
                         [[0,1], [2], [1], [1], [2], [2]], 
-                        [[1], [2,1], [1], [1]], 
+                        [[0], [2,1], [1], [1]], 
                         [[0], [1], [2]],
                         [[2], [1], [2], [0], [0]], 
                         [[0], [0], [0], [1], [2]], 
@@ -52,7 +51,7 @@ print(p.verifying_costraints(initial_state))
 
 # per ora la configurazione non va bene perché c'è qualche stanza scoperta ma ho sonno
 
-p.objective_function(initial_state)
+print(p.objective_function(initial_state))
 
 
 
