@@ -238,6 +238,9 @@ class Problem():
             for elem in list_set_ot_per_surgeon.values():
                 for insieme_OTS in elem:
                     value_obj += self.weights['surgeon_transfer']* min([0, len(insieme_OTS)-1])
+                    
+                    
+        # costs of assigning a nurse with not enough skill level to a room
         
         
         return value_obj

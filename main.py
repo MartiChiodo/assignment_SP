@@ -43,10 +43,9 @@ rooms_to_be_assigned = [[[0, 1], [2], [0]],
                         [[0], [0], [0], [1], [2]], 
                         [[1],  [2], [2], [1], [0]], 
                         [[1], [2], [2], [0]]]
-# II. aggiorno il dizionario delle infermiere
-{key: nurse.add_room_to_scheduling(rooms_to_be_assigned[cont]) for cont, (key, nurse) in enumerate(nurses.items())}
-# III. creating state (the matrix willbe created automatically)
-initial_state = State(dict_admission_0, nurses, p.days)
+
+# II. creating state (the matrix willbe created automatically)
+initial_state = State(dict_admission_0, nurses, rooms_to_be_assigned, p.days)
 
 
 print(p.verifying_costraints(initial_state))

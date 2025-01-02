@@ -3,25 +3,25 @@ from .problem import Problem
 
 class State():
     
-    def __init__(self, dict_admission, nurses, days):
+    def __init__(self, dict_admission, nurses, rooms_to_be_assigned, days):
         # nurses is the dictionare of all the nurses 
         self.dict_admission = dict_admission
-        self.nurses_shifts = self.creating_nurses_shifts_matrix(nurses, days)
+        self.nurses_shifts = self.creating_nurses_shifts_matrix(nurses, rooms_to_be_assigned, days)
         self.scheduling_OTs = self.defying_scheduling_OTs(dict_admission, days)
     
     def adding_matrix(self, matrix):
         self.patients_per_room = matrix
 
         
-    def creating_nurses_shifts_matrix(self, nurses, days):
+    def creating_nurses_shifts_matrix(self, nurses, rooms_to_be_assigned, days):
         dict = {}
-        for id_nurse, nurse in nurses.items():
+        for idx, (id_nurse, nurse) in enumerate(nurses.items()):
             # at first I create a list with all -1 then I am going to fill it with the rooms
             sched = [-1 for _ in range(3*days)]
             
-            for shift in nurse.working_shift:
+            for id_shift, shift in enumerate(nurse.working_shift):
                 id = 3*shift['day'] + shift['shift']
-                sched[id] = shift['rooms']
+                sched[id] = rooms_to_be_assigned[idx][id_shift]
                 
             dict[id_nurse] = sched
         
