@@ -16,10 +16,10 @@ class Problem():
         self.days = days
         
         # DECISIONAL VARIABLES and COSTRAINTS
-        #   - for each patients, the admission date (negative values for optional patient for postponed scheduling period)
+        #   - for each patient, the admission date (negative values for optional patient for postponed scheduling period)
         #       I. for mandatory patients, admision date > 0 and release_date <= admission <= due_date
         #       II. for optional patients, release_date <= admission (the others became soft costraints --> penalize in obj func)
-        #   - for each patients, the allocation of the room (-1 patient has not been accepted)
+        #   - for each patient, the allocation of the room (-1 if the patient has not been accepted)
         #       I. room_id should not be in the list of incopatible_id
         #       II. be careful on capacity costraints on rooms
         #       III. people of different genders cannot be in the same room
@@ -27,7 +27,7 @@ class Problem():
         #       I.  all costraints about assigning a nurse to a room are soft costraints --> penalize on the obj function
         #       II. we need to check that there are negative values on the shifts she is not working
         #       III. we need to check that each non-empty room has assigned a nurse
-        #   - a matrix (num_patients) x 2 in which the i-th row contains the info about in which OT the patient i is operated and in which day 
+        #   - a matrix (num_patients) x 2 in which the i-th row contains the info about which OT the patient i is operated in and in which day 
         #       I. verifying that the capacities about OTs and surgeons are satisfied
         
         # HOW WE STORE THE DECISION VARIABLES
@@ -44,7 +44,7 @@ class Problem():
               
         # CHECKING IF STATE IS AMMISSIBLE
         # faccio un controllo sull'esistenza delle sale operatorie e delle stanze assegnate (non dovrebbe essere necessario perché si parte da una configurazione ammissibile e 
-        #   nella definizione dei vicini terremo cono di questa cosa, ma potrebbe essere utile se riscontriamo problemi)
+        #   nella definizione dei vicini terremo conto di questa cosa, ma potrebbe essere utile se riscontriamo problemi)
         for key, value in state.dict_admission.items():
             if len(value) != 3:
                 raise ValueError('STATO NON AMMISSIBILE: la riga del pazione {key} ha una lunghezza diversa da 3.'.format(key=repr(key)))
@@ -60,7 +60,7 @@ class Problem():
             
             
         # AMMISIBILITY OF STATE BASED ON NURSES' SCHEDULING
-        # first I check If alla nurses have received a scheduling
+        # first I check If all nurses have received a scheduling
         len_state = len(state.nurses_shifts.keys())
         len_expected = len(self.nurses.keys()) 
         if len_state != len_expected :
