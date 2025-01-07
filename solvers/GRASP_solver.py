@@ -1,3 +1,6 @@
+import copy
+from .instances.state import State
+
 
 class GRASP_Solver():
     def __init__(self, problem, initial_guess):
@@ -10,7 +13,29 @@ class GRASP_Solver():
         # I. perturbazione stanze/date ammissioni pazienti controllando un minimo i vincoli
         # II. scambiare le stanze tra le infermiere che lavorano nello stesso shift
         # III. for optional patients nel vicinato metti anche l'opzione di non operarlo
-
+        
+        # perturbazione dict_admission
+        for id_pat, value in state.dict_adission.items():
+            # aggungo 1 alla data di ammissione
+            new_dict = copy.deepcopy(state.dict_admission)
+            new_dict[id_pat][1] = state.dict_admission[id_pat][1] +1 
+            
+            new_state = State(self.problem.nurses, new_dict, state.rooms_to_be_assigned, state.days)
+            if state.dict_admission[id_pat][1] +1 < self.days: neighborhoods.append(new_state)
+            
+            # tolgo 1 alla data di ammissione
+            new_dict = copy.deepcopy(state.dict_admission)
+            new_dict[id_pat][1] = state.dict_admission[id_pat][1] - 1 
+            new_state = State(self.problem.nurses, new_dict, state.rooms_to_be_assigned, state.days)
+            if state.dict_admission[id_pat][1] > 0: neighborhoods.append(new_state)
+            
+            # se il pazientenon' mandatory lo tolgo dall'ammissione
+            if self.problem.patients[id_pat].mandatory == False:
+                new_dict = copy.deepcopy(state.dict_admission)
+                new_dict[id_pat][1] = -1
+                new_state = State(self.problem.nurses, new_dict, state.rooms_to_be_assigned, state.days)
+                neighborhoods.append(new_state)
+                
         neighborhoods = []
         
         

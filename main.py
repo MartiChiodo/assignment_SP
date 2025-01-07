@@ -31,6 +31,8 @@ dict_admission_0 = {'p0' : ['t0', 4, 0], 'p1': ['t0', 6, 1]}
 # La matriciona comoda verrà poi calcolata mentre si crea la istanza dello Stato con una funzione apposita. Qui di seguito ti faccio vdere i passaggi chiave
 
 # I. per ogni infermiera definisco una lista con le stanze (ogni elemento corrisponde solo ad un turno in cui lavora)
+
+            
 rooms_to_be_assigned = [[[0, 1], [2], [0]], 
                         [[2], [1], [2]], 
                         [[2, 1], [2], [1], [0], [0]], 
