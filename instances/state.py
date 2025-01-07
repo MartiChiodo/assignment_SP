@@ -6,8 +6,9 @@ class State():
     def __init__(self, dict_admission, nurses, rooms_to_be_assigned, days):
         # nurses is the dictionare of all the nurses 
         self.dict_admission = dict_admission
+        self.room_to_be_assigned = rooms_to_be_assigned
         self.nurses_shifts = self.creating_nurses_shifts_matrix(nurses, rooms_to_be_assigned, days)
-        self.scheduling_OTs = self.defying_scheduling_OTs(dict_admission, days)
+        self.scheduling_OTs = self.defyning_scheduling_OTs(dict_admission, days)
     
     def adding_matrix(self, matrix):
         self.patients_per_room = matrix
@@ -27,7 +28,7 @@ class State():
         
         return dict
     
-    def defying_scheduling_OTs(self,dict_admission, days):
+    def defyning_scheduling_OTs(self,dict_admission, days):
         # I am creating a dictionary of list: at each OT I associate its scheduling 
         dict = {}
         
