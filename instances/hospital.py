@@ -17,10 +17,6 @@ class Hospital():
         
         self.mappatura = {elem['id']: i for i, elem in enumerate(rooms_listofdict)}
     
-    def add_patient(self, idx_room, acceptance_date, lenght_stay):
-        for i in range(lenght_stay):
-            row = min(acceptance_date + i, self.days)
-            self.occupation[row][idx_room] += 1
         
     def define_avalaibility(self, idx_ot, avalaibility_ot):
         self.avalaibility[idx_ot] = avalaibility_ot
