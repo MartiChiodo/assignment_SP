@@ -1,5 +1,7 @@
 import math
 import numpy as np
+import random
+from .state import State
 
 
 class Problem():
@@ -283,8 +285,65 @@ class Problem():
         return value_obj
             
             
-            
+    def generating_feasible_state(self):
+        # I will generate a feasible state by creating a random scheduling for the nurses and then I will generate the dict_admission
         
+        non_ho_ancora_generate_un_feasible_state = True
+        
+        while non_ho_ancora_generate_un_feasible_state:
+            
+            # genero randomicamente il dizionario di ammissione, ossia la data di ammissione, la OT usata e la stanza di soggiorno
+            dict_admission = {}
+            for id_pat in self.patients.keys():
+                dict_admission[id_pat] = [random.choice(list(self.hospital.avalaibilityOT.keys())), min([random.randint(0,self.hospital.days-1), self.patients[id_pat].surgery_release_day]), random.randint(0,self.hospital.n_rooms-1)]
+            
+            
+            # associo randomicamente le stanze alle infermiere cercando di creare uno stato ammissibile
+            rooms_to_be_assigned = [[[] for _ in range(len(self.nurses[id_nurse].working_shift))] for id_nurse in self.nurses.keys()] 
+                        
+            
+            for day in range(self.days):
+                for shift in range(3):
+                    # prima devo capire quante nurse ho per ogni shift
+                    lista_nurses = []
+                    for nurse in self.nurses.keys():
+                        if any([s['day'] == day and s['shift'] == shift for s in self.nurses[nurse].working_shift]):
+                            lista_nurses.append(nurse)
+                    
+                    
+                    # se ho 4 nurse che lavorano e 9 stanze assegno a tutte le nurse 2 stanze e all'ultima le 3 rimanenti
+                    # se ho 4 nurse e 4 stanze --> 1 stanza a nurse
+                    num_stanze_da_assegnare = self.hospital.n_rooms // len(lista_nurses)
+                    set_assigned_rooms = set()
+                    cont = 0
+                    
+                    for idx, nurse in enumerate(self.nurses.keys()):
+                        if nurse in lista_nurses: cont+=1
+                        if not cont == len(lista_nurses):
+                            for id_shift, s in enumerate(self.nurses[nurse].working_shift):
+                                if s['day'] == day and s['shift'] == shift:
+                                    
+                                    # genero un tot di volte le stanze da assegnare
+                                    for _ in range(num_stanze_da_assegnare):
+                                        room = random.randint(0, self.hospital.n_rooms - 1)
+                                        while room in set_assigned_rooms:
+                                            room = random.randint(0, self.hospital.n_rooms - 1)
+                                        set_assigned_rooms.add(room)
+                                        rooms_to_be_assigned[idx][id_shift].append(room)
 
-    
-    
+                                    
+                                    
+                        else:
+                            for id_shift, s in enumerate(self.nurses[nurse].working_shift):
+                                if s['day'] == day and s['shift'] == shift:
+                                    rooms_to_be_assigned[idx][id_shift] = list(set(range(self.hospital.n_rooms)) - set(set_assigned_rooms))
+                            
+                                    
+                            
+            state = State(dict_admission, self.nurses, rooms_to_be_assigned, self.days)
+            if self.verifying_costraints(state):
+                non_ho_ancora_generate_un_feasible_state = False
+        
+        return state
+        
+        

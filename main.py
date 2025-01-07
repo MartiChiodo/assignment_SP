@@ -4,7 +4,7 @@ from solvers import *
 import json 
 
 # impporting data from toy.json
-with open("./data/toy.json") as input_f:
+with open("./data/ihtc2024_test_dataset/test03.json") as input_f:
     data = json.load(input_f)
 
 
@@ -28,32 +28,18 @@ dict_admission_0 = {'p0' : ['t0', 4, 0], 'p1': ['t0', 6, 1]}
 # ma un po' meno comoda da creare, perciò ho creato un po' di funzioni che ci facilitino il lavoro.
 # Nella classe nurse ho aggiunto un valore al dizionario 'working_shift' che ci permette di assegnare le stanze al turno dell'infermiera.
 # Per rendere la cosa più easy ho aggiunto anche una funzione che data una lista di stanze va a riempire opportunamente questo nuovo valore.
-# La matriciona comoda verrà poi calcolata mentre si crea la istanza dello Stato con una funzione apposita. Qui di seguito ti faccio vdere i passaggi chiave
+# La matriciona comoda verrà poi calcolata mentre si crea la istanza dello Stato con una funzione apposita. Qui di seguito ti faccio vdere i passaggi chiave     
 
-# I. per ogni infermiera definisco una lista con le stanze (ogni elemento corrisponde solo ad un turno in cui lavora)
-
-            
-rooms_to_be_assigned = [[[0, 1], [2], [0]], 
-                        [[2], [1], [2]], 
-                        [[2, 1], [2], [1], [0], [0]], 
-                        [[1,2], [2], [1], [0], [0,1], [2]], 
-                        [[0,1], [2], [1], [1], [2], [2]], 
-                        [[0], [2,1], [1], [1]], 
-                        [[0], [1], [2]],
-                        [[2], [1], [2], [0], [0]], 
-                        [[0], [0], [0], [1], [2]], 
-                        [[1],  [2], [2], [1], [0]], 
-                        [[1], [2], [2], [0]]]
-
-# II. creating state (the matrix willbe created automatically)
-initial_state = State(dict_admission_0, nurses, rooms_to_be_assigned, p.days)
+# proviamo a generare uno stato casuale con la nuova funzione
+rnd_state = p.generating_feasible_state()
+print(rnd_state.dict_admission)
 
 
-print(p.verifying_costraints(initial_state))
+print(p.verifying_costraints(rnd_state))
 
 # per ora la configurazione non va bene perché c'è qualche stanza scoperta ma ho sonno
 
-print(p.objective_function(initial_state))
+print(p.objective_function(rnd_state))
 
 
 

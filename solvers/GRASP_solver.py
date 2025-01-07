@@ -95,42 +95,103 @@ class GRASP_Solver():
                         new_state.rooms_to_be_assigned[idx2]= state.rooms_to_be_assigned[idx1][indice_room_1]
                         
                         neighborhoods.append(new_state)
-                       
-        
-        pass
+                        
+        return neighborhoods
+            
 
-    def solve(self, problem):
+    def solve(self, problem, num_restart = 5, iter_max = 100):
         current_solution = self.initial_guess
         current_best_f = problem.objective_function(current_solution)
-        max_iter = 10 # number of starting solutions from which we apply local search
-        best_solution = current_solution
-        best_f = current_best_f
         
-        for outer_iter in range(max_iter): 
+        best_solution_from_restart = []
+        best_f_from_restart = []
+
+        
+        for _ in range(iter_max): 
             neighbors = self.get_neighborhood(current_solution)
             # we apply the best improvement, exploring all the given neighborhood
             f_neighbors = []
+            best_neigh = current_solution
+            best_neigh_f = current_best_f
+            
             for idx, neig in enumerate(neighbors):
-                if problem.verifying_constraints(neig): f_neighbors.append(problem.objective_function(neig))
-                else: del neighbors[idx]
+                if problem.verifying_constraints(neig): 
+                    obj_fun = problem.objective_function(neig)
+                    f_neighbors.append(obj_fun)
+                    
+                    # mi salvo se faccio un improvement
+                    if obj_fun <= best_neigh_f:
+                        best_neigh = neig
+                        best_neigh_f = obj_fun
                 
-            min_value = min(f_neighbors)
-            if min_value <= current_best_f: 
-                current_solution = neighbors.index(min_value)
-                current_best_f = min_value
-            else: 
-                 # as we are starting from scratch we don't want to throw away the current best, in case we won't find anything better
-                 best_solution = current_solution
-                 best_f = current_best_f 
-                 # generation of a new starting point if no improvement has been found
-                 # QUESTO LO FACCIAMO COME? MODIFICHIAMO LA SOLUZIONE CORRENTE IN MODO RANDOM FINCHE' NON SODDISFA I VINCOLI O E' TROPPO LUNGO?
+        # I store the best values to compare them at the end of the search               
+        best_solution_from_restart.append(best_neigh)
+        best_f_from_restart.append(best_neigh_f)
+                
+                 
+        # we restart the search from the a random solution
+        for _ in range(num_restart):
+            # generate a random solution
+            current_solution = problem.generating_feasible_state()
+            current_best_f = problem.objective_function(current_solution)
+            
+            for _ in range(iter_max): 
+                neighbors = self.get_neighborhood(current_solution)
+                # we apply the best improvement, exploring all the given neighborhood
+                f_neighbors = []
+                best_neigh = current_solution
+                best_neigh_f = current_best_f
+                
+                for idx, neig in enumerate(neighbors):
+                    if problem.verifying_constraints(neig): 
+                        obj_fun = problem.objective_function(neig)
+                        f_neighbors.append(obj_fun)
+                        
+                        # mi salvo se faccio un improvement
+                        if obj_fun <= best_neigh_f:
+                            best_neigh = neig
+                            best_neigh_f = obj_fun
+                            
+            # I store the best values to compare them at the end of the search               
+            best_solution_from_restart.append(best_neigh)
+            best_f_from_restart.append(best_neigh_f)
+                    
+                    
+                    
+        # we restart a last time from the best solution found
+        current_solution = best_solution_from_restart[best_f_from_restart.index(min(best_f_from_restart))]
+        current_best_f = min(best_f_from_restart)
+        
+        for _ in range(iter_max): 
+            neighbors = self.get_neighborhood(current_solution)
+            # we apply the best improvement, exploring all the given neighborhood
+            f_neighbors = []
+            best_neigh = current_solution
+            best_neigh_f = current_best_f
+            
+            for idx, neig in enumerate(neighbors):
+                if problem.verifying_constraints(neig): 
+                    obj_fun = problem.objective_function(neig)
+                    f_neighbors.append(obj_fun)
+                    
+                    # mi salvo se faccio un improvement
+                    if obj_fun <= best_neigh_f:
+                        best_neigh = neig
+                        best_neigh_f = obj_fun
+                          
+        # I store the best values to compare them at the end of the search               
+        best_solution_from_restart.append(best_neigh)
+        best_f_from_restart.append(best_neigh_f)
+            
 
-        if best_f < current_best_f: solution = best_solution
-        else: solution = current_solution
 
-        return solution 
+        # I return the best solution found
+        best_solution = best_solution_from_restart[best_f_from_restart.index(min(best_f_from_restart))]
+        best_f = min(best_f_from_restart)
+        
+        return best_solution, best_f 
 
-        pass
+
     
 
     

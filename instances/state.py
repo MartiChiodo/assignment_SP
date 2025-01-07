@@ -1,5 +1,4 @@
 import math
-from .problem import Problem
 
 class State():
     
