@@ -2,6 +2,7 @@ import math
 import numpy as np
 import random
 from .state import State
+import copy
 
 
 class Problem():
@@ -54,11 +55,15 @@ class Problem():
             id_OT = value[0]
             id_ROOM = value[2]
             
-            if id_OT not in self.hospital.avalaibilityOT.keys():
+            if id_OT not in self.hospital.capacity_per_OT.keys():
                 raise ValueError('STATO NON AMMISSIBILE: la sala operatoria {id_OT} non esiste.'.format(id_OT=repr(id_OT)))
 
-            if id_ROOM not in range(self.hospital.n_rooms):
+            if id_ROOM not in range(self.hospital.n_rooms) and not id_ROOM == None:
                 raise ValueError('STATO NON AMMISSIBILE: la stanza post-ricovero numero {id_ROOM} non esiste.'.format(id_ROOM=repr(id_ROOM)))
+            
+            
+            if not ((value[1]  >= 0 and value[1] <= self.days-1) or value[1] == -1) :
+                raise ValueError('STATO NON AMMISSIBILE: la data di ammissione {data} non è valida'.format(data=repr(value[1])))
             
             
         # AMMISIBILITY OF STATE BASED ON NURSES' SCHEDULING
@@ -131,8 +136,8 @@ class Problem():
         
         
         # COSTRAINTS ON SURGICAL PLANNING
-        dict_surgerytimepersurgeon = {key : elem.max_surgery_time  for key,elem in self.surgeons.items()}
-        dict_surgerytimeperot =  self.hospital.avalaibilityOT
+        dict_surgerytimepersurgeon = {key : copy.deepcopy(elem.max_surgery_time)  for key,elem in self.surgeons.items()}
+        dict_surgerytimeperot =  copy.deepcopy(self.hospital.capacity_per_OT)
         for id_patient,list in state.dict_admission.items():
             # checking if admission date is feasible    
             if self.people[id_patient].mandatory:
@@ -144,7 +149,7 @@ class Problem():
                 flag = (list[1] >=  self.people[id_patient].surgery_release_day) or  list[1] == -1
                 
             # subctracting surgery time from dictionary
-            id_tempo = (list[1]-1) % 7 # % mod operator
+            id_tempo = (list[1]) % 7 # % mod operator
             id_surg = self.people[id_patient].surgeon_id
             
             dict_surgerytimepersurgeon[id_surg][id_tempo] -= self.people[id_patient].surgery_duration
@@ -291,56 +296,128 @@ class Problem():
         non_ho_ancora_generate_un_feasible_state = True
         
         while non_ho_ancora_generate_un_feasible_state:
+            problem_copy = copy.deepcopy(self)
             
             # genero randomicamente il dizionario di ammissione, ossia la data di ammissione, la OT usata e la stanza di soggiorno
             dict_admission = {}
-            for id_pat in self.patients.keys():
-                dict_admission[id_pat] = [random.choice(list(self.hospital.avalaibilityOT.keys())), min([random.randint(0,self.hospital.days-1), self.patients[id_pat].surgery_release_day]), random.randint(0,self.hospital.n_rooms-1)]
+            for id_pat in problem_copy.patients.keys():
+                
+                # prima assegno le stanze ai mandatory
+                if problem_copy.patients[id_pat].mandatory:
+            
+                    date_possibili = set(range(problem_copy.patients[id_pat].surgery_release_day, problem_copy.patients[id_pat].surgery_due_day+1))                        
+         
+                    # tolgo le date in cui il chirurgo non lavora
+                    for data, value in enumerate(problem_copy.surgeons[problem_copy.patients[id_pat].surgeon_id].max_surgery_time):
+                        if value == 0 : 
+                            try: date_possibili.remove(data)
+                            except: pass
+
+                    data = random.choice(list(date_possibili))
+                    
+                    # scelgo una stanza tra quelle non piene  
+                    stanze_possibili  = set(range(problem_copy.hospital.n_rooms)) - set(problem_copy.patients[id_pat].incompatible_room_ids)
+                    
+                    for id_data_controllo in range(data, min([data+problem_copy.patients[id_pat].length_of_stay, problem_copy.days])):
+                        for id_room in range(problem_copy.hospital.n_rooms):
+                            # togliamo le stanze piene
+                            if problem_copy.hospital.avalaibiity_per_room[id_data_controllo][id_room] <= 0: 
+                                try: stanze_possibili.remove(id_room)
+                                except: pass
+                            # togliamo le stanze che contengono persone del sesso opposto
+                            if not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == problem_copy.patients[id_pat].gender  and  not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == None:
+                                try: stanze_possibili.remove(id_room)
+                                except: pass
+                        
+                    
+                    try:
+                        room = random.choice(list(stanze_possibili))  
+                    except:
+                        continue
+                    
+                    problem_copy.hospital.add_patient(room, data, problem_copy.patients[id_pat].length_of_stay, problem_copy.patients[id_pat].gender)    
+                    dict_admission[id_pat] = [random.choice(list(problem_copy.hospital.capacity_per_OT.keys())), data, room]
+                
+            # poi assegno le stanze ai non mandatory, se non trovo la stanza non li accetto
+            for id_pat in problem_copy.patients.keys():
+                if not problem_copy.patients[id_pat].mandatory:
+        
+                    date_possibili = set(range(problem_copy.patients[id_pat].surgery_release_day, problem_copy.days))   
+                    date_possibili.add(-1)                     
+            
+                    # tolgo le date in cui il chirurgo non lavora
+                    for data, value in enumerate(problem_copy.surgeons[problem_copy.patients[id_pat].surgeon_id].max_surgery_time):
+                        if value == 0 : 
+                            try: date_possibili.remove(data)
+                            except: pass
+
+                    data = random.choice(list(date_possibili))
+                    
+                    # scelgo una stanza tra quelle non piene  
+                    stanze_possibili  = set(range(problem_copy.hospital.n_rooms)) - set(problem_copy.patients[id_pat].incompatible_room_ids)
+                    
+                    for id_data_controllo in range(data, min([data+problem_copy.patients[id_pat].length_of_stay, problem_copy.days])):
+                        for id_room in range(problem_copy.hospital.n_rooms):
+                            # togliamo le stanze piene
+                            if problem_copy.hospital.avalaibiity_per_room[id_data_controllo][id_room] <= 0: 
+                                try: stanze_possibili.remove(id_room)
+                                except: pass
+                            # togliamo le stanze che contengono persone del sesso opposto
+                            if not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == problem_copy.patients[id_pat].gender  and  not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == None:
+                                try: stanze_possibili.remove(id_room)
+                                except: pass
+                    
+                    try:
+                        room = random.choice(list(stanze_possibili)) 
+                    except:
+                        data = -1
+                        
+                    if data == -1: room = None
+                    
+                    problem_copy.hospital.add_patient(room, data, problem_copy.patients[id_pat].length_of_stay, problem_copy.patients[id_pat].gender)    
+                    dict_admission[id_pat] = [random.choice(list(problem_copy.hospital.capacity_per_OT.keys())), data, room]
             
             
             # associo randomicamente le stanze alle infermiere cercando di creare uno stato ammissibile
-            rooms_to_be_assigned = [[[] for _ in range(len(self.nurses[id_nurse].working_shift))] for id_nurse in self.nurses.keys()] 
+            rooms_to_be_assigned = [[[] for _ in range(len(problem_copy.nurses[id_nurse].working_shift))] for id_nurse in problem_copy.nurses.keys()] 
                         
             
-            for day in range(self.days):
+            for day in range(problem_copy.days):
                 for shift in range(3):
                     # prima devo capire quante nurse ho per ogni shift
                     lista_nurses = []
-                    for nurse in self.nurses.keys():
-                        if any([s['day'] == day and s['shift'] == shift for s in self.nurses[nurse].working_shift]):
+                    for nurse in problem_copy.nurses.keys():
+                        if any([s['day'] == day and s['shift'] == shift for s in problem_copy.nurses[nurse].working_shift]):
                             lista_nurses.append(nurse)
                     
                     
                     # se ho 4 nurse che lavorano e 9 stanze assegno a tutte le nurse 2 stanze e all'ultima le 3 rimanenti
                     # se ho 4 nurse e 4 stanze --> 1 stanza a nurse
-                    num_stanze_da_assegnare = self.hospital.n_rooms // len(lista_nurses)
-                    set_assigned_rooms = set()
+                    num_stanze_da_assegnare = problem_copy.hospital.n_rooms // len(lista_nurses)
+                    room_tra_cui_scegliere = [i for i in range(problem_copy.hospital.n_rooms)]
                     cont = 0
                     
-                    for idx, nurse in enumerate(self.nurses.keys()):
+                    for idx, nurse in enumerate(problem_copy.nurses.keys()):
                         if nurse in lista_nurses: cont+=1
                         if not cont == len(lista_nurses):
-                            for id_shift, s in enumerate(self.nurses[nurse].working_shift):
+                            for id_shift, s in enumerate(problem_copy.nurses[nurse].working_shift):
                                 if s['day'] == day and s['shift'] == shift:
                                     
                                     # genero un tot di volte le stanze da assegnare
                                     for _ in range(num_stanze_da_assegnare):
-                                        room = random.randint(0, self.hospital.n_rooms - 1)
-                                        while room in set_assigned_rooms:
-                                            room = random.randint(0, self.hospital.n_rooms - 1)
-                                        set_assigned_rooms.add(room)
+                                        room = random.choice(room_tra_cui_scegliere)
+                                        room_tra_cui_scegliere.remove(room)
                                         rooms_to_be_assigned[idx][id_shift].append(room)
-
-                                    
-                                    
+           
                         else:
-                            for id_shift, s in enumerate(self.nurses[nurse].working_shift):
+                            # all'ultima infermiera toccano le stanze rimaste
+                            for id_shift, s in enumerate(problem_copy.nurses[nurse].working_shift):
                                 if s['day'] == day and s['shift'] == shift:
-                                    rooms_to_be_assigned[idx][id_shift] = list(set(range(self.hospital.n_rooms)) - set(set_assigned_rooms))
+                                    rooms_to_be_assigned[idx][id_shift] = room_tra_cui_scegliere
                             
                                     
                             
-            state = State(dict_admission, self.nurses, rooms_to_be_assigned, self.days)
+            state = State(dict_admission, problem_copy.nurses, rooms_to_be_assigned, problem_copy.days)
             if self.verifying_costraints(state):
                 non_ho_ancora_generate_un_feasible_state = False
         

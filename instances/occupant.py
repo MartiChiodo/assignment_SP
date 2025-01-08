@@ -8,7 +8,7 @@ class Occupant():
              
         # we are encoding the name of the room in natural numbers
         self.room_id = hosp.encoding_room(self.room_id)     
-        hosp.add_patient(self.room_id, 0, self.length_of_stay)
+        hosp.add_patient(self.room_id, 0, self.length_of_stay, self.gender)
 
         
     def encoding_agegroup(self, age_groups):

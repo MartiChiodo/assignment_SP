@@ -2,6 +2,7 @@ import numpy as np
 from instances import *
 from solvers import *
 import json 
+import random
 
 # impporting data from toy.json
 with open("./data/ihtc2024_test_dataset/test03.json") as input_f:
@@ -20,8 +21,7 @@ weights = data['weights']
 
 p = Problem(surgeons, nurses, patients, occupants, hospital, weights, data['days'])
 
-dict_admission_0 = {'p0' : ['t0', 4, 0], 'p1': ['t0', 6, 1]}
-
+print(hospital.avalaibiity_per_room)
 
 # ciao Sophie qui ti faccio un piccolo spiegone del casotto che ho fatto.
 # La nostra matrice per salvarci le assegnazioni stanza - nurse è molto comoda per verificare i vincoli
@@ -31,15 +31,18 @@ dict_admission_0 = {'p0' : ['t0', 4, 0], 'p1': ['t0', 6, 1]}
 # La matriciona comoda verrà poi calcolata mentre si crea la istanza dello Stato con una funzione apposita. Qui di seguito ti faccio vdere i passaggi chiave     
 
 # proviamo a generare uno stato casuale con la nuova funzione
+random.seed(1)
 rnd_state = p.generating_feasible_state()
-print(rnd_state.dict_admission)
 
 
-print(p.verifying_costraints(rnd_state))
+# SOLVING THE OPT PROBLEM
+print('\n')
+print('*********************************')
+print('SOLVING THE OPTIMIZATION PROBLEM')
+solver = GRASP_Solver(p, rnd_state)
+best_solution, best_f = solver.solve()
 
-# per ora la configurazione non va bene perché c'è qualche stanza scoperta ma ho sonno
-
-print(p.objective_function(rnd_state))
+print('Best obj function = ', best_f)
 
 
 
