@@ -18,9 +18,5 @@ class Patient():
         self.age_group = mappatura[self.age_group]
         return self
         
-    def define_entry_patient(self, date, id_room):
-        # patient is added in id_room room
-        self.room_id = id_room
-        self.acceptance_date = date
-        self.hosp.add_patient(id_room, date, self.length_of_stay)
+
         

@@ -21,11 +21,13 @@ class Hospital():
         
         self.mappatura = {elem['id']: i for i, elem in enumerate(rooms_listofdict)}
     
+
     def add_patient(self, idx_room, acceptance_date, lenght_stay, gender):
         if not idx_room == None:
             for i in range(acceptance_date, min([acceptance_date + lenght_stay, self.days])):
                 self.avalaibiity_per_room[i][idx_room] -= 1
                 self.sesso_per_room[i][idx_room] = gender
+
         
     def encoding_room(self, id_room):
         return self.mappatura[id_room]
