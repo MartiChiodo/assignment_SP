@@ -20,18 +20,10 @@ surgeons = {elem['id']: Surgeon(elem) for elem in data['surgeons']}
 weights = data['weights']
 
 p = Problem(surgeons, nurses, patients, occupants, hospital, weights, data['days'])
+   
 
-print(hospital.avalaibiity_per_room)
-
-# ciao Sophie qui ti faccio un piccolo spiegone del casotto che ho fatto.
-# La nostra matrice per salvarci le assegnazioni stanza - nurse è molto comoda per verificare i vincoli
-# ma un po' meno comoda da creare, perciò ho creato un po' di funzioni che ci facilitino il lavoro.
-# Nella classe nurse ho aggiunto un valore al dizionario 'working_shift' che ci permette di assegnare le stanze al turno dell'infermiera.
-# Per rendere la cosa più easy ho aggiunto anche una funzione che data una lista di stanze va a riempire opportunamente questo nuovo valore.
-# La matriciona comoda verrà poi calcolata mentre si crea la istanza dello Stato con una funzione apposita. Qui di seguito ti faccio vdere i passaggi chiave     
-
-# proviamo a generare uno stato casuale con la nuova funzione
-random.seed(1)
+# the initial guess is generated randomly with a function
+random.seed(384)
 rnd_state = p.generating_feasible_state()
 
 
@@ -40,9 +32,75 @@ print('\n')
 print('*********************************')
 print('SOLVING THE OPTIMIZATION PROBLEM')
 solver = GRASP_Solver(p, rnd_state)
-best_solution, best_f = solver.solve()
+best_solution, best_f = solver.solve(num_restart=1)
 
 print('Best obj function = ', best_f)
 
+p.objective_function(best_solution, opt=1)
 
 
+# writing the solution json file
+import json
+ 
+# Data to be written
+dictionary = {}
+
+lista_pat = []
+for id_pat in patients.keys():
+    dict_admission_pat = best_solution.dict_admission[id_pat]
+    room = 'r'+ str(dict_admission_pat[2])
+    
+    if dict_admission_pat[1] == -1: 
+        dict_admission_pat[1] = 'none'
+        
+        dic_prv = {
+                "id": id_pat,
+                "admission_day": dict_admission_pat[1],
+             }  
+        
+    else:
+        dic_prv = {
+                    "id": id_pat,
+                    "admission_day": dict_admission_pat[1],
+                    "room": room,
+                    "operating_theater": dict_admission_pat[0]
+                }  
+    
+    lista_pat.append(dic_prv)
+
+dictionary['patients'] = lista_pat   
+
+lista_nurses = []
+for id_n, id_nurses in enumerate(nurses.keys()):
+    dic_prv = {'id': id_nurses}
+    lista_assignments = []
+    
+    for id_s, sched in enumerate(nurses[id_nurses].working_shift):
+        rooms = best_solution.room_to_be_assigned[id_n][id_s]
+        rooms_right_syntax = ['r'+ str(elem) for elem in rooms ]
+        
+        if sched['shift'] == 0: shift = 'early'
+        elif sched['shift'] == 1: shift = 'late'
+        elif sched['shift'] == 2: shift = 'night'
+        
+        dict_ass = {
+            'day': sched['day'],
+            'shift': shift,
+            'rooms': rooms_right_syntax
+        }
+        
+        lista_assignments.append(dict_ass)
+    
+    dic_prv['assignments'] = lista_assignments
+        
+    lista_nurses.append(dic_prv)
+
+dictionary['nurses'] = lista_nurses
+
+
+# Serializing json
+json_object = json.dumps(dictionary, indent=4)
+ 
+# Writing to sample.json
+with open("results/solution.json", "w") as outfile:
+    outfile.write(json_object)

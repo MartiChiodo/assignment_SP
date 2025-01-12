@@ -21,13 +21,14 @@ class GRASP_Solver():
         for id_pat, value in state.dict_admission.items():
             if  value[1]  == -1:
                 # se il paziente non è stato ammesso posso solo ammetterlo
-                new_dict = copy.deepcopy(state.dict_admission)
-                new_dict[id_pat][1] = min([random.randint(0, self.problem.days-1), self.problem.patients[id_pat].surgery_release_day])
-                
-                for id_room in range(self.problem.hospital.n_rooms):
-                    new_dict[id_pat][2] = id_room
-                    new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
-                    neighborhoods.append(new_state)
+                for data in range(self.problem.patients[id_pat].surgery_release_day, self.problem.days):
+                    new_dict = copy.deepcopy(state.dict_admission)
+                    new_dict[id_pat][1] = data
+                    
+                    for id_room in range(self.problem.hospital.n_rooms):
+                        new_dict[id_pat][2] = id_room
+                        new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
+                        neighborhoods.append(new_state)
             else:
                 # aggungo 1 alla data di ammissione
                 new_dict = copy.deepcopy(state.dict_admission)
@@ -113,7 +114,7 @@ class GRASP_Solver():
         return neighborhoods
             
 
-    def solve(self, num_restart = 5, iter_max = 1000):
+    def solve(self, num_restart = 5, iter_max_cost = 50):
         problem = self.problem
         current_solution = self.initial_guess
         current_best_f = problem.objective_function(current_solution)
@@ -140,12 +141,11 @@ class GRASP_Solver():
         f_neighbors = []
         best_neigh = current_solution
         best_neigh_f = current_best_f
-        while cont < iter_max and ho_un_miglioramento_nel_vicinato: 
+        while cont < iter_max_cost and ho_un_miglioramento_nel_vicinato: 
             ho_un_miglioramento_nel_vicinato = False
             neighbors = self.get_neighborhood(current_solution)
             # we apply the best improvement, exploring all the given neighborhood
             
-            cont += 1
             
             print('Ho creato un vicinato ', end=' --> ')
             for idx, neig in enumerate(neighbors):
@@ -154,12 +154,20 @@ class GRASP_Solver():
                     f_neighbors.append(obj_fun)
                     
                     # mi salvo se faccio un improvement
-                    if obj_fun <= best_neigh_f:
+                    if obj_fun < best_neigh_f:
                         ho_un_miglioramento_nel_vicinato = True
                         best_neigh = neig
                         best_neigh_f = obj_fun
+                        cont = 0
                         
-            if ho_un_miglioramento_nel_vicinato: print('il vicinato contiene un miglioramento.')
+                    elif obj_fun <= best_neigh_f:
+                        ho_un_miglioramento_nel_vicinato = True
+                        best_neigh = neig
+                        best_neigh_f = obj_fun
+                        cont += 1
+                        
+                        
+            if ho_un_miglioramento_nel_vicinato: print('il vicinato contiene un miglioramento, fbest = ', best_neigh_f)
             else: print('il vicinato non contiene nessun miglioramento.')
             
             best_values.append(best_neigh_f)
@@ -181,7 +189,7 @@ class GRASP_Solver():
         print('Generazione nuovi punti di partenza ... ')       
         # we restart the search from the a random solution
         for id_restart in range(num_restart):
-            print(f'\n {id_restart} -esimo restart ... ')
+            print(f'\n {1 + id_restart} -esimo restart ... ')
             
             # aggiungo una riga rossa verticale al plot 
             plt.axvline(x=len(best_values), color='red', linestyle='--', label="Restart")
@@ -197,7 +205,7 @@ class GRASP_Solver():
             best_neigh = current_solution
             best_neigh_f = current_best_f
             
-            while cont < iter_max and ho_un_miglioramento_nel_vicinato: 
+            while cont < iter_max_cost and ho_un_miglioramento_nel_vicinato: 
                 ho_un_miglioramento_nel_vicinato = False
                 neighbors = self.get_neighborhood(current_solution)
                 
@@ -210,13 +218,20 @@ class GRASP_Solver():
                         f_neighbors.append(obj_fun)
                         
                         # mi salvo se faccio un improvement
-                        if obj_fun <= best_neigh_f:
+                        if obj_fun < best_neigh_f:
                             ho_un_miglioramento_nel_vicinato = True
                             best_neigh = neig
                             best_neigh_f = obj_fun
+                            cont = 0
+                            
+                        elif obj_fun <= best_neigh_f:
+                            ho_un_miglioramento_nel_vicinato = True
+                            best_neigh = neig
+                            best_neigh_f = obj_fun
+                            cont += 1
                             
                             
-                if ho_un_miglioramento_nel_vicinato: print('il vicinato contiene un miglioramento.')
+                if ho_un_miglioramento_nel_vicinato: print('il vicinato contiene un miglioramento, fbest = ', best_neigh_f)
                 else: print('il vicinato non contiene nessun miglioramento.')
                             
                 best_values.append(best_neigh_f)

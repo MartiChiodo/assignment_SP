@@ -42,12 +42,12 @@ class Hospital():
         # filling the list with the state
         for key, value in dict_acceptance.items():
             if value[1] != -1:
-                id_data = (value[1]) # id date of acceptance
+                id_data = value[1]  # id date of acceptance
                 id_room = value[2]
                 
                 if (id_data + problem.patients[key].length_of_stay -1) < self.days-1: 
                     for i in range(problem.patients[key].length_of_stay):
-                        matrix[id_data+1][id_room].append(key)
+                        matrix[id_data+i][id_room].append(key)
                 else:
                     for i in range(self.days - id_data):
                         matrix[id_data + i][id_room].append(key)

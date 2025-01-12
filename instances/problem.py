@@ -43,7 +43,7 @@ class Problem():
         
     def verifying_costraints(self, state):
         
-        flag = True  # true if state is feasible
+        flag_feasible_state = True  # true if state is feasible
               
         # CHECKING IF STATE IS AMMISSIBLE
         # faccio un controllo sull'esistenza delle sale operatorie e delle stanze assegnate (non dovrebbe essere necessario perché si parte da una configurazione ammissibile e 
@@ -124,15 +124,16 @@ class Problem():
                         lista_genderinaroom.append(patient.gender)
                         
                         try:
-                            flag = room not in patient.incompatible_room_ids #check whether patient is in an incompatible room
+                            flag_feasible_state = room not in patient.incompatible_room_ids #check whether patient is in an incompatible room
                         except:
                             pass
                             
                             
-                    flag = len(set(lista_genderinaroom)) <= 1 # checking that in a room there are people of same gender
+                    if len(set(lista_genderinaroom)) > 1:
+                        return False
                 
                 # cheking the costraints on capacities per room
-                flag = len(state.patients_per_room[day][room]) <= self.hospital.capacity_per_room[room]
+                flag_feasible_state = len(state.patients_per_room[day][room]) <= self.hospital.capacity_per_room[room]
         
         
         # COSTRAINTS ON SURGICAL PLANNING
@@ -141,21 +142,27 @@ class Problem():
         for id_patient,list in state.dict_admission.items():
             # checking if admission date is feasible    
             if self.people[id_patient].mandatory:
-                flag = list[1] <= self.people[id_patient].surgery_due_day
-                flag = list[1] >=  self.people[id_patient].surgery_release_day
+                flag_feasible_state = list[1] <= self.people[id_patient].surgery_due_day
+                flag_feasible_state = list[1] >=  self.people[id_patient].surgery_release_day
             else:
                 # for non mandatory we need to check that acceptance date is not further the last day
-                flag = list[1] <= self.hospital.days
-                flag = (list[1] >=  self.people[id_patient].surgery_release_day) or  list[1] == -1
+                flag_feasible_state = list[1] <= self.hospital.days
+                flag_feasible_state = (list[1] >=  self.people[id_patient].surgery_release_day) or  list[1] == -1
                 
             # subctracting surgery time from dictionary
-            id_tempo = (list[1]) % 7 # % mod operator
-            id_surg = self.people[id_patient].surgeon_id
-            
-            dict_surgerytimepersurgeon[id_surg][id_tempo] -= self.people[id_patient].surgery_duration
-            flag = dict_surgerytimepersurgeon[id_surg][id_tempo] >= 0 # checkong that the time is still non-negative
-            dict_surgerytimeperot[list[0]][id_tempo] -= self.people[id_patient].surgery_duration
-            flag =  dict_surgerytimeperot[list[0]][id_tempo] >= 0 # checkong that the time is still non-negative
+            id_tempo = list[1] 
+            if not id_tempo == -1:
+                id_surg = self.people[id_patient].surgeon_id
+                
+                new_time = dict_surgerytimepersurgeon[id_surg][id_tempo] - self.people[id_patient].surgery_duration
+                dict_surgerytimepersurgeon[id_surg][id_tempo] = new_time
+                if new_time < 0: 
+                    return False # checking that the time is still non-negative
+                
+                new_time = dict_surgerytimeperot[list[0]][id_tempo] - self.people[id_patient].surgery_duration
+                dict_surgerytimeperot[list[0]][id_tempo] = new_time
+                if new_time < 0: 
+                    return False # checking that the time is still non-negative
             
         
         # CHECKING IF ALL OCCUPIED ROOM HAS AT LEAST ONE NURSE ASSIGNED
@@ -193,14 +200,14 @@ class Problem():
                 
                     # if only one of this cont is still 0  we have an unfeasible point
                     if cont_earlysh != 1 or cont_latesh != 1 or cont_nightsh != 1:
-                        flag = False
+                        flag_feasible_state = False
         
-        return flag
+        return flag_feasible_state
             
 
-    def objective_function(self, state):
+    def objective_function(self, state, opt = 0):
         # if a state is passed to this function we assume it is feasible
-        value_obj = 0
+        weights_to_add = {elem: 0 for elem in self.weights.keys()}
         
         # penalizing age groups 
         for day, prospetto_giornaliero in enumerate(state.patients_per_room):
@@ -210,27 +217,27 @@ class Problem():
                 for pers in prospetto_room:
                     set_agegorups.add(self.people[pers].age_group)
 
-            # penalizing when there is more than 1 age group
-            if len(set_agegorups) > 1: value_obj+= self.weights['room_mixed_age']
+                # penalizing the differences between age groups
+                if len(set_agegorups) > 0:
+                    weights_to_add['room_mixed_age'] += max(set_agegorups) - min(set_agegorups) 
         
         
         
         # penalties for surgical delays + unscheduled patients
         for id_pat, value in state.dict_admission.items():
-            if value[1] == -1: value_obj += self.weights['unscheduled_optional']
-            elif self.patients[id_pat].mandatory:
-                delay =  min([self.patients[id_pat].surgery_due_day - value[1],0])
-                value_obj += delay*self.weights['patient_delay']
+            if value[1] == -1: weights_to_add['unscheduled_optional'] += 1
+            elif self.patients[id_pat].mandatory == 'true' or self.patients[id_pat].mandatory:
+                delay = value[1] - self.patients[id_pat].surgery_due_day
+                weights_to_add['patient_delay'] += max(delay,0)
                 
                 
         # costs for openenig a OT + penalizing surgeon transfer
+        list_set_ot_per_surgeon = {}
+        surgeon_ids = self.surgeons.keys()
+        for id_surg in surgeon_ids:
+            list_set_ot_per_surgeon[id_surg] = [set() for _ in range(self.days)]
+                
         for id_OT, prospetto_per_OT in state.scheduling_OTs.items():
-            
-            list_set_ot_per_surgeon = {}
-            surgeon_ids = self.surgeons.keys()
-            for id_surg in surgeon_ids:
-                list_set_ot_per_surgeon[id_surg] = [set() for _ in range(self.days)]
-            
             for day, prospetto_giornaliero in enumerate(prospetto_per_OT):
                 set_OTs = set()
                 # prospetto_giornaliero is a list containing all the ids of the patients who are operated in the OT in a certain day
@@ -239,18 +246,18 @@ class Problem():
                     set_OTs.add(id_OT)
                 
                 # dding cost for opened OTs
-                value_obj += self.weights['open_operating_theater'] * len(set_OTs)
+                weights_to_add['open_operating_theater'] +=  len(set_OTs)
             
-            # adding costs for surgeon transfers
-            for elem in list_set_ot_per_surgeon.values():
-                for insieme_OTS in elem:
-                    value_obj += self.weights['surgeon_transfer']* min([0, len(insieme_OTS)-1])
-                    
+        # adding costs for surgeon transfers
+        for elem in list_set_ot_per_surgeon.values():
+            for insieme_OTS in elem:
+                weights_to_add['surgeon_transfer'] += max(len(insieme_OTS) - 1,0)
+                
                     
         # costs of assigning a nurse with not enough skill level to a room + workload + continuity of care
         set_of_nurse_par_people = {}
-        for id_peo in self.people.keys():
-            set_of_nurse_par_people[id_peo] = set()
+        for id_pat in self.people.keys():
+            set_of_nurse_par_people[id_pat] = set()
         
         for id_nurse, sched in state.nurses_shifts.items():
             for id_shift, room_vec in enumerate(sched):
@@ -261,7 +268,7 @@ class Problem():
                         id_pat_vec = state.patients_per_room[int(id_shift/3)][room]
                         for id_pat in id_pat_vec:
                             
-                            set_of_nurse_par_people[id_peo].add(id_nurse)
+                            set_of_nurse_par_people[id_pat].add(id_nurse)
                             
                             if id_pat in self.patients.keys():
                                 # id_shift = data_accept*3 + x --> x = id_shift - data_accept*3
@@ -272,7 +279,7 @@ class Problem():
                                 sum_workload += self.occupants[id_pat].workload_produced[id_shift]
                             
                                 
-                            value_obj += self.weights['room_nurse_skill'] * max(0, skill_min_required - self.nurses[id_nurse].skill_level)
+                            weights_to_add['room_nurse_skill'] +=  max(0, skill_min_required - self.nurses[id_nurse].skill_level)
                             
                     # end for on room_vec
                     # I have to dermine the max_load for a nurse by searching it in the dictionary
@@ -281,11 +288,19 @@ class Problem():
                         idx_x = 3*elem['day'] + elem['shift']
                         if idx_x == id_shift: max_workload = elem['max_load']
                         
-                    value_obj += self.weights['nurse_eccessive_workload'] * max(0, sum_workload - max_workload)
+                    weights_to_add['nurse_eccessive_workload'] += max(0, sum_workload - max_workload)
                                 
             
         for set_of_nurses in set_of_nurse_par_people:
-            value_obj += len(set_of_nurses)
+            weights_to_add['continuity_of_care'] += len(set_of_nurses)
+            
+        # computing the objective function
+        value_obj = 0
+        for key in weights_to_add.keys():
+            value_obj += weights_to_add[key]*self.weights[key]
+        
+        if opt == 1:
+            print(weights_to_add)
         
         return value_obj
             
@@ -338,41 +353,12 @@ class Problem():
                     problem_copy.hospital.add_patient(room, data, problem_copy.patients[id_pat].length_of_stay, problem_copy.patients[id_pat].gender)    
                     dict_admission[id_pat] = [random.choice(list(problem_copy.hospital.capacity_per_OT.keys())), data, room]
                 
-            # poi assegno le stanze ai non mandatory, se non trovo la stanza non li accetto
+            # per facilitarmi la vita, i pazienti non mandatory non verranno accettati
             for id_pat in problem_copy.patients.keys():
                 if not problem_copy.patients[id_pat].mandatory:
         
-                    date_possibili = set(range(problem_copy.patients[id_pat].surgery_release_day, problem_copy.days))   
-                    date_possibili.add(-1)                     
-            
-                    # tolgo le date in cui il chirurgo non lavora
-                    for data, value in enumerate(problem_copy.surgeons[problem_copy.patients[id_pat].surgeon_id].max_surgery_time):
-                        if value == 0 : 
-                            try: date_possibili.remove(data)
-                            except: pass
-
-                    data = random.choice(list(date_possibili))
-                    
-                    # scelgo una stanza tra quelle non piene  
-                    stanze_possibili  = set(range(problem_copy.hospital.n_rooms)) - set(problem_copy.patients[id_pat].incompatible_room_ids)
-                    
-                    for id_data_controllo in range(data, min([data+problem_copy.patients[id_pat].length_of_stay, problem_copy.days])):
-                        for id_room in range(problem_copy.hospital.n_rooms):
-                            # togliamo le stanze piene
-                            if problem_copy.hospital.avalaibiity_per_room[id_data_controllo][id_room] <= 0: 
-                                try: stanze_possibili.remove(id_room)
-                                except: pass
-                            # togliamo le stanze che contengono persone del sesso opposto
-                            if not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == problem_copy.patients[id_pat].gender  and  not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == None:
-                                try: stanze_possibili.remove(id_room)
-                                except: pass
-                    
-                    try:
-                        room = random.choice(list(stanze_possibili)) 
-                    except:
-                        data = -1
-                        
-                    if data == -1: room = None
+                    data = -1
+                    room = None
                     
                     problem_copy.hospital.add_patient(room, data, problem_copy.patients[id_pat].length_of_stay, problem_copy.patients[id_pat].gender)    
                     dict_admission[id_pat] = [random.choice(list(problem_copy.hospital.capacity_per_OT.keys())), data, room]
