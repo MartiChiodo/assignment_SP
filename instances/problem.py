@@ -245,7 +245,7 @@ class Problem():
                     list_set_ot_per_surgeon[self.patients[id_pat].surgeon_id][day].add(id_OT)
                     set_OTs.add(id_OT)
                 
-                # dding cost for opened OTs
+                # adding cost for opened OTs
                 weights_to_add['open_operating_theater'] +=  len(set_OTs)
             
         # adding costs for surgeon transfers

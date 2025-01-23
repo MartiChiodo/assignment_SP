@@ -1,0 +1,95 @@
+\documentclass{article}
+
+% Language setting
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm,marginparwidth=1.75cm]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% Useful packages
+\usepackage{matlab-prettifier} % per il codice Matlab colorato carino
+\usepackage{csvsimple-l3} % per le tabelle
+\usepackage{booktabs} % per le tabelle
+\usepackage{longtable} % per le tabelle
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[thinc]{esdiff}
+\usepackage{minted}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{optidef}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{subcaption}   % Per immagini affiancate con didascalie
+
+
+\title{Report SO}
+\author{Chiodo Martina - 343310 \\ Vigè Sophie - 339268}
+\date{}
+
+\begin{document}
+\input{title.tex}
+
+\section{Data structures}
+The problem considered is the scheduling of surgeries and patients' admission in a single healthcare 
+system. We are provided with different entities populating the system, and for each of them we created a corresponding class:
+\begin{itemize}
+    \item Hospital: even if there is only one hospital considered, we use this object to store and update information about 
+    the rooms (their capacity, availability at a certain time, sex of the people in it) and the operating theaters (their availability). 
+    Here there is also a function (\texttt{creating\_matrix\_dayxroomxpatients}) that creates a 3-dimensional matrix that will be useful to verify constraints: 
+    it is a list of length the number of days containing, for each day, a list of length the total number of rooms that contains a list of all the people
+    staying in the said room during the said day.
+    \item Nurse: nurses are identified by their id and the shifts they are working are given and fixed.
+    \item Surgeon: they are treated similarly to the nurses, but their maximum surgery time on available days must be respected (it is an hard 
+    constraint, differently from the nurses' one).
+    \item Occupant: patients that are already in the hospital at the beginning of the considered period of time.
+    \item Patient: patients still to be admitted. Their admission can either be mandatory or not.
+    \item Problem: we store here all the dictionaries containing the istances of the previous classes. In this way we can verify 
+    the constraints and generate feasible states.
+    \item State: a certain schedule for the hospital; some structures are used to memorize it. 
+    First, the scheduling of patients' admissions. It is stored in a dictionary which has as key the id of the patient and 
+    as a value a vector of three elements: the operating theatre his surgery will take place in, the date of the surgery (which 
+    coincides with the admission date and it is setted to -1 if the non mandatory patient is not admitted within the considered 
+    scheduling period) and the room the patient is staying in.
+    Then, a dictionary that has as key nurses' id and as value a vector (with length the total number of shifts in the 
+    period of time) containing -1 if the nurse is not working and otherwise the id of the rooms he is assigned to (they can be even more than one per shift). 
+    Lastly the scheduling for the operating theaters: a dictionary with key the id of the OT and as value a vector (with length the total number 
+    of days) that for each day contains the list of ids of the patients that undergo surgery in that OT that day.
+    We store here also the 3-dimensional matrix introduced above, when created using the method of the Hospital class.
+\end{itemize}
+
+
+\section{Hard and soft constraints}
+Hard constraints must be satisfied for a state to be feasible, while soft constraints if not satisfied produce a penalty in the 
+objective function. The costs of these penalties are given and fixed.
+
+In order to verify the feasibility of a given state we start by checking that all the operating theaters, rooms and admission dates exist.
+
+Then, for each nurse we check that they have at least a room assigned for the shifts they are supposed to be working and no room assigned during 
+the shifts they are unavailable.
+
+For every room, we check that it is not incompatible for the people staying in it, that there is not gender mix among the patients and 
+that the maximum capacity of the room is respected. We also need to check that there is always at least a nurse assigned to it (if the room is not empty).
+
+For every mandatory patient we check that they are admitted within the scheduling period and, more specifically, their admission date
+should be between their release date and their due date. For non-mandatory patients that are admitted, the check is just on the release date,
+since they do not have a due date.
+
+Lastly, for every surgeon and operating theatre, we check that the total amount of time of the scheduled
+surgeries does not exceed the maximum available for every considered day.
+
+For soft constraints, we penalize in the eveluation of the objective function the following: admission delays (we want to minimize the number of 
+days between a patient's release date and their admission) and unscheduled non-mandatory patients, opening of operating theaters, surgeon transfers. 
+For nurses, the eventual excess of their maximum workload, the continuity of care (we try to minimize the number of different nurses that take care of 
+a patient) and the minimum skill required for a patient, that might not be respected by the nurse.
+
+\section{Neighborhoods generation}
+
+\section{Outcome}
+
+\end{document}
