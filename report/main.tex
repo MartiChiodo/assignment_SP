@@ -52,13 +52,13 @@ system. We are provided with different entities populating the system, and for e
     \item Problem: we store here all the dictionaries containing the istances of the previous classes. In this way we can verify 
     the constraints and generate feasible states.
     \item State: a certain schedule for the hospital; some structures are used to memorize it. 
-    First, the scheduling of patients' admissions. It is stored in a dictionary which has as key the id of the patient and 
+    First, the scheduling of patients' admissions. It is stored in a dictionary (\texttt{dict\_admission}) which has as key the id of the patient and 
     as a value a vector of three elements: the operating theatre his surgery will take place in, the date of the surgery (which 
     coincides with the admission date and it is setted to -1 if the non mandatory patient is not admitted within the considered 
     scheduling period) and the room the patient is staying in.
-    Then, a dictionary that has as key nurses' id and as value a vector (with length the total number of shifts in the 
+    Then, a dictionary (\texttt{nurses\_shifts}) that has as key nurses' id and as value a vector (with length the total number of shifts in the 
     period of time) containing -1 if the nurse is not working and otherwise the id of the rooms he is assigned to (they can be even more than one per shift). 
-    Lastly the scheduling for the operating theaters: a dictionary with key the id of the OT and as value a vector (with length the total number 
+    Lastly the scheduling for the operating theaters: a dictionary (\texttt{scheduling\_OTs}) with key the id of the OT and as value a vector (with length the total number 
     of days) that for each day contains the list of ids of the patients that undergo surgery in that OT that day.
     We store here also the 3-dimensional matrix introduced above, when created using the method of the Hospital class.
 \end{itemize}
@@ -89,7 +89,42 @@ For nurses, the eventual excess of their maximum workload, the continuity of car
 a patient) and the minimum skill required for a patient, that might not be respected by the nurse.
 
 \section{Neighborhoods generation}
+The \textit{Greedy Randomized Adaptive Search Procedure} (GRASP) is based on repeated local search in the neighborhood 
+of a given point. We generate, for each given state, a set of states obtained by perturbation of the given one. When doing 
+so, we try to check some of the hard constraints in order not to generate too many neighbors that are not feasible states.
+The perturbations performed are the following:
+\begin{itemize}
+    \item If a non-mandatory patient was not admitted within the scheduling period, we admit him. We generate several new states, 
+    admitting the considered patient in every possible date after his release date and in every possible room.
+    \item If a patient is mandatory, we generate new states by adding or subtracting a day to their admission date (if this makes sense, for example 
+    we cannot add +1 to the admission date of a patient that was admitted on the last day of the scheduling period).
+    \item If a non-mandatory patient was admitted, we generate a new state where we do not admit him within the scheduling period.
+    \item For every admitted patient, we perturbate the room they are assigned to, by adding or subtracting 1 to the id of the room (or just adding or 
+    subtracting if they are in the first or last room).
+    \item For every admitted patient, we change the operating theaters they are assigned to by choosing randomly between the available ones.
+    \item For all the nurses, we generate some new states where we exchange the rooms that two nurses working in the same shift are asssigned to.
+\end{itemize}
 
-\section{Outcome}
+
+\section{GRASP implementation and outcome}
+The idea of GRASP is the following: given an initial feasible state, we generate and explore all its neighborhood,
+updating the current solution with the best found in it. If such a current solution is found and it is different from the previous one, 
+we repeat the local search step in a neighborhood of this new state. Otherwise we generate a new feasible starting state and repeat.
+
+In order to generate randomly a feasible state we have to check that all the hard constraints are respected. If a state is generated 
+completely randomly it will be very likely unfeasible. So, in the class \texttt{problem}, the function \texttt{generating\_feasible\_state} 
+is built in such a way that it returns a feasible state that is partially random, but generated taking into account some of the hard constraints 
+in order not to discard too many generated states and save computational time.
+
+The admission date for each mandatory patient is chosen randomly between their release date to their due date, exluding the days their assigned surgeon 
+is not working. The room a patient is assigned to is chosen randomly between the ones that are not already full and we consider every room to be "labeled" with the sex 
+of the patients in it, so we exclude those belonging to the opposite sex. For the sake of simplicity we don't admit non-mandatory patients (this is not restrictive, since 
+in the generation of neighborhood we will admit them). We assign the nurses to the rooms by counting how many nurses are working in each shifts; in this way we decide 
+how many rooms should a nurse cover (for example if we have 9 working nurses and 9 rooms we assign one room per nurse, while if we only have 4 nurses, we give 2 rooms each to 
+the first three and 3 to the last nurse). The room each nurse is assigned to is chosen randomly.
+
+All the elements needed to run the GRASP on the given problem have been built. The result of a run 
+is the following.
+
 
 \end{document}

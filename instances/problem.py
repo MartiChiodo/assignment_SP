@@ -227,7 +227,7 @@ class Problem():
         for id_pat, value in state.dict_admission.items():
             if value[1] == -1: weights_to_add['unscheduled_optional'] += 1
             elif self.patients[id_pat].mandatory == 'true' or self.patients[id_pat].mandatory:
-                delay = value[1] - self.patients[id_pat].surgery_due_day
+                delay = value[1] - self.patients[id_pat].surgery_release_day #surgery_due_day
                 weights_to_add['patient_delay'] += max(delay,0)
                 
                 
