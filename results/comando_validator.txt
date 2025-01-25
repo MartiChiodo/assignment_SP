@@ -1,0 +1,3 @@
+Per la validazione far runnare questo comando nella prompt bash aperta in questa cartella
+
+./IHTP_Validator.exe test03.json solution.json verbose
