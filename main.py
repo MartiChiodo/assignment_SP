@@ -32,7 +32,7 @@ def main():
     
 
     # the initial guess is generated randomly with a function
-    random.seed(384)
+    random.seed(min(343310, 339268))
     rnd_state = p.generating_feasible_state()
 
 

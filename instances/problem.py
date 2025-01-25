@@ -124,7 +124,9 @@ class Problem():
                         lista_genderinaroom.append(patient.gender)
                         
                         try:
-                            flag_feasible_state = room not in patient.incompatible_room_ids #check whether patient is in an incompatible room
+                            if room in patient.incompatible_room_ids:
+                                flag_feasible_state = False
+                                return False
                         except:
                             pass
                             
@@ -133,8 +135,10 @@ class Problem():
                         return False
                 
                 # cheking the costraints on capacities per room
-                flag_feasible_state = len(state.patients_per_room[day][room]) <= self.hospital.capacity_per_room[room]
-        
+                if len(state.patients_per_room[day][room]) > self.hospital.capacity_per_room[room]:
+                    flag_feasible_state = False
+                    return False
+         
         
         # COSTRAINTS ON SURGICAL PLANNING
         dict_surgerytimepersurgeon = {key : copy.deepcopy(elem.max_surgery_time)  for key,elem in self.surgeons.items()}
@@ -227,7 +231,7 @@ class Problem():
         for id_pat, value in state.dict_admission.items():
             if value[1] == -1: weights_to_add['unscheduled_optional'] += 1
             elif self.patients[id_pat].mandatory == 'true' or self.patients[id_pat].mandatory:
-                delay = value[1] - self.patients[id_pat].surgery_release_day #surgery_due_day
+                delay = value[1] - (self.patients[id_pat].surgery_release_day-1)  #surgery_due_day
                 weights_to_add['patient_delay'] += max(delay,0)
                 
                 

@@ -2,6 +2,7 @@ import copy
 from instances.state import State
 import random
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 
 class GRASP_Solver():
@@ -114,150 +115,114 @@ class GRASP_Solver():
         return neighborhoods
             
 
-    def solve(self, num_restart = 5, iter_max_cost = 50):
+    def solve(self, num_restart=5, iter_max_cost=50):
         problem = self.problem
         current_solution = self.initial_guess
         current_best_f = problem.objective_function(current_solution)
-        
+
         best_solution_from_restart = []
         best_f_from_restart = []
-        
-        # Enable interactive mode
-        plt.ion()
+        best_values = [current_best_f]  # Track the best values for the plot
+        restart_points = []  # Track the iteration indices where restarts happen
 
-        # Initialize the plot
-        fig, ax = plt.subplots()
-        best_values = [current_best_f]
-        line, = ax.plot(best_values, marker='o')
-        ax.set_xlabel('Iteration')
-        ax.set_ylabel('Best Value')
-        ax.set_title('Best Value per Iteration')
-
-        cont = 0    
+        # Optimization Loop
+        cont = 0
         ho_un_miglioramento_nel_vicinato = True
-        
-        
-        print('Prima iterazione dall\'initial guess ... ')
-        f_neighbors = []
-        best_neigh = current_solution
-        best_neigh_f = current_best_f
-        while cont < iter_max_cost and ho_un_miglioramento_nel_vicinato: 
+        print("Prima iterazione dall'initial guess ... ")
+        while cont < iter_max_cost and ho_un_miglioramento_nel_vicinato:
             ho_un_miglioramento_nel_vicinato = False
             neighbors = self.get_neighborhood(current_solution)
-            # we apply the best improvement, exploring all the given neighborhood
-            
-            
+
             print('Ho creato un vicinato ', end=' --> ')
             for idx, neig in enumerate(neighbors):
-                if problem.verifying_costraints(neig): 
+                if problem.verifying_costraints(neig):
                     obj_fun = problem.objective_function(neig)
-                    f_neighbors.append(obj_fun)
-                    
-                    # mi salvo se faccio un improvement
-                    if obj_fun < best_neigh_f:
+                    if obj_fun < current_best_f:
                         ho_un_miglioramento_nel_vicinato = True
-                        best_neigh = neig
-                        best_neigh_f = obj_fun
+                        current_solution = neig
+                        current_best_f = obj_fun
                         cont = 0
-                        
-                    elif obj_fun <= best_neigh_f:
+                    elif obj_fun <= current_best_f:
                         ho_un_miglioramento_nel_vicinato = True
-                        best_neigh = neig
-                        best_neigh_f = obj_fun
+                        current_solution = neig
+                        current_best_f = obj_fun
                         cont += 1
-                        
-                        
-            if ho_un_miglioramento_nel_vicinato: print('il vicinato contiene un miglioramento, fbest = ', best_neigh_f)
-            else: print('il vicinato non contiene nessun miglioramento.')
-            
-            best_values.append(best_neigh_f)
-                        
-            # Update the plot
-            line.set_ydata(best_values)
-            line.set_xdata(range(len(best_values)))
-            ax.relim()
-            ax.autoscale_view()
-            plt.draw()
-            plt.pause(0.01)
 
-                 
-        # I store the best values to compare them at the end of the search               
-        best_solution_from_restart.append(best_neigh)
-        best_f_from_restart.append(best_neigh_f)
-        
-        print('\n')        
-        print('Generazione nuovi punti di partenza ... ')       
-        # we restart the search from the a random solution
+            if ho_un_miglioramento_nel_vicinato:
+                print('il vicinato contiene un miglioramento, fbest = ', current_best_f)
+            else:
+                print('il vicinato non contiene nessun miglioramento.')
+
+            # Update the best values for the plot
+            best_values.append(current_best_f)
+
+        # Store the best results from this restart
+        best_solution_from_restart.append(current_solution)
+        best_f_from_restart.append(current_best_f)
+
+        print('\nGenerazione nuovi punti di partenza ... ')
         for id_restart in range(num_restart):
-            print(f'\n {1 + id_restart} -esimo restart ... ')
-            
-            # aggiungo una riga rossa verticale al plot 
-            plt.axvline(x=len(best_values), color='red', linestyle='--', label="Restart")
+            print(f'\n {1 + id_restart}-esimo restart ... ')
 
-            # generate a random solution
+            # Track the restart point for plotting
+            restart_points.append(len(best_values))
+
+            # Generate a new random solution
             current_solution = problem.generating_feasible_state()
             current_best_f = problem.objective_function(current_solution)
-            
             cont = 0
             ho_un_miglioramento_nel_vicinato = True
-            
-            f_neighbors = []
-            best_neigh = current_solution
-            best_neigh_f = current_best_f
-            
-            while cont < iter_max_cost and ho_un_miglioramento_nel_vicinato: 
+
+            while cont < iter_max_cost and ho_un_miglioramento_nel_vicinato:
                 ho_un_miglioramento_nel_vicinato = False
                 neighbors = self.get_neighborhood(current_solution)
-                
+
                 cont += 1
-                
+
                 print('Ho creato un vicinato ', end=' --> ')
                 for idx, neig in enumerate(neighbors):
-                    if problem.verifying_costraints(neig): 
+                    if problem.verifying_costraints(neig):
                         obj_fun = problem.objective_function(neig)
-                        f_neighbors.append(obj_fun)
-                        
-                        # mi salvo se faccio un improvement
-                        if obj_fun < best_neigh_f:
+                        if obj_fun < current_best_f:
                             ho_un_miglioramento_nel_vicinato = True
-                            best_neigh = neig
-                            best_neigh_f = obj_fun
+                            current_solution = neig
+                            current_best_f = obj_fun
                             cont = 0
-                            
-                        elif obj_fun <= best_neigh_f:
+                        elif obj_fun <= current_best_f:
                             ho_un_miglioramento_nel_vicinato = True
-                            best_neigh = neig
-                            best_neigh_f = obj_fun
+                            current_solution = neig
+                            current_best_f = obj_fun
                             cont += 1
-                            
-                            
-                if ho_un_miglioramento_nel_vicinato: print('il vicinato contiene un miglioramento, fbest = ', best_neigh_f)
-                else: print('il vicinato non contiene nessun miglioramento.')
-                            
-                best_values.append(best_neigh_f)
-                        
-                # Update the plot
-                line.set_ydata(best_values)
-                line.set_xdata(range(len(best_values)))
-                ax.relim()
-                ax.autoscale_view()
-                plt.draw()
-                plt.pause(0.01)
-                            
-            # I store the best values to compare them at the end of the search               
-            best_solution_from_restart.append(best_neigh)
-            best_f_from_restart.append(best_neigh_f)
-                    
-            
 
+                if ho_un_miglioramento_nel_vicinato:
+                    print('il vicinato contiene un miglioramento, fbest = ', current_best_f)
+                else:
+                    print('il vicinato non contiene nessun miglioramento.')
 
-        # I return the best solution found
+                # Update the best values for the plot
+                best_values.append(current_best_f)
+
+        # Final plot update and adjustment
+        plt.figure(figsize=(8, 6))
+        plt.plot(best_values, 'b-o', label="Best Objective Value")
+        
+        # Optional: Add vertical lines for restart points
+        for restart in restart_points:
+            plt.axvline(x=restart, color='red', linestyle='--', label="Restart Point")
+
+        # Set plot labels and title
+        plt.xlabel("Iterations")
+        plt.ylabel("Objective Value")
+        plt.title("Optimization Progress")
+
+        # Save the plot as a PDF or PNG
+        plt.savefig('optimization_plot.pdf', bbox_inches='tight')  # Save as PDF
+        plt.savefig('optimization_plot.png', dpi=300, bbox_inches='tight')  # Save as PNG
+        
+        # Show the plot
+        plt.show()
+
+        # Return the overall best solution
         best_solution = best_solution_from_restart[best_f_from_restart.index(min(best_f_from_restart))]
         best_f = min(best_f_from_restart)
-        
-        return best_solution, best_f 
-
-
-    
-
-    
+        return best_solution, best_f
