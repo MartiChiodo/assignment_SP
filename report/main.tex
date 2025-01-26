@@ -101,7 +101,7 @@ The perturbations performed are the following:
     \item If a non-mandatory patient was admitted, we generate a new state where we do not admit him within the scheduling period.
     \item For every admitted patient, we perturbate the room they are assigned to, by adding or subtracting 1 to the id of the room (or just adding or 
     subtracting if they are in the first or last room).
-    \item For every admitted patient, we change the operating theaters they are assigned to by choosing randomly between the available ones.
+    \item For every admitted patient, we change the operating theater they are assigned to by choosing randomly between the available ones.
     \item For all the nurses, we generate some new states where we exchange the rooms that two nurses working in the same shift are asssigned to.
 \end{itemize}
 
@@ -125,6 +125,32 @@ the first three and 3 to the last nurse). The room each nurse is assigned to is 
 
 All the elements needed to run the GRASP on the given problem have been built. The result of a run 
 is the following.
+
+\begin{figure}[H]
+    \centering
+    % Prima immagine
+    \begin{subfigure}[t]{0.45\textwidth}  % Larghezza del 45% del testo
+        \centering
+        \includegraphics[width=\textwidth]{img/1_restart.png}
+        \caption{One restart allowed}
+    \end{subfigure}
+    \hspace{1cm} %spaziatura tra le immagini
+    % Seconda immagine
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/3_restarts.png}
+        \caption{Three restarts allowed}
+    \end{subfigure}
+    % Didascalia generale
+    \caption{Cost of generated feasible solutions. The red line corresponds to restarts occurring when no improving solution is found in the neighborhood of the current point.}
+    \label{GRASP}
+\end{figure}
+
+In both cases, the best value of the objective function found is 11728.
+
+Red lines indicates when the method restarts from scratch, picking randomly a new feasible state. That's why the 
+value of the objective function can increase here, while it is always non-increasing in the other points, where exploration of the 
+neighborhoods is performed.
 
 
 \end{document}

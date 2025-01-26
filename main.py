@@ -41,7 +41,7 @@ def main():
     print('*********************************')
     print('SOLVING THE OPTIMIZATION PROBLEM')
     solver = GRASP_Solver(p, rnd_state)
-    best_solution, best_f = solver.solve(num_restart=1)
+    best_solution, best_f = solver.solve(num_restart=3)
 
     print('Best obj function = ', best_f)
 
