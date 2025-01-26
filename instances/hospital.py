@@ -18,10 +18,10 @@ class Hospital():
         self.capacity_per_OT = {elem['id']: elem['availability'] for elem in ot_listofdict}
         
         self.days = days
-        
+
+        # we will need this attribute to map rooms ids into an integer value
         self.mappatura = {elem['id']: i for i, elem in enumerate(rooms_listofdict)}
     
-
     def add_patient(self, idx_room, acceptance_date, lenght_stay, gender):
         if not idx_room == None:
             for i in range(acceptance_date, min([acceptance_date + lenght_stay, self.days])):
@@ -34,6 +34,8 @@ class Hospital():
     
     def creating_matrix_dayxroomxpatients(self, dict_acceptance, problem):
         matrix = []
+        # matrix will contain 3*days lists each containing n lists (n = number of rooms) where are stored the occupants of each room
+        
         for day in range(self.days):
             matrix.append([])
             for room in range(self.n_rooms):
@@ -64,6 +66,5 @@ class Hospital():
                 for i in range(self.days - id_data):
                     matrix[id_data + i][id_room].append(key)
                 
-        # matrix contains 3*days lists each containing n lists (n = number of rooms) where are stored the occupants of each room
-            
+        
         return matrix
