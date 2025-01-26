@@ -360,13 +360,16 @@ class Problem():
                     dict_admission[id_pat] = [random.choice(list(problem_copy.hospital.capacity_per_OT.keys())), data, room]
             
             
-            # associo randomicamente le stanze alle infermiere cercando di creare uno stato ammissibile
+            # Assignment of room to a nurse's shift
+            # We are trying to do that in a way to create a feasible state while maintaing an compound of randomness:
+            # - first we compute how many nurses are working in a given shift
+            # - we distribute randomly the rooms among the nurses un a way that the assignements nurse-room are bijettive for each shift
             rooms_to_be_assigned = [[[] for _ in range(len(problem_copy.nurses[id_nurse].working_shift))] for id_nurse in problem_copy.nurses.keys()] 
                         
             
             for day in range(problem_copy.days):
                 for shift in range(3):
-                    # prima devo capire quante nurse ho per ogni shift
+                    # computing the number of nurses in the shift
                     lista_nurses = []
                     for nurse in problem_copy.nurses.keys():
                         if any([s['day'] == day and s['shift'] == shift for s in problem_copy.nurses[nurse].working_shift]):
@@ -385,14 +388,14 @@ class Problem():
                             for id_shift, s in enumerate(problem_copy.nurses[nurse].working_shift):
                                 if s['day'] == day and s['shift'] == shift:
                                     
-                                    # genero un tot di volte le stanze da assegnare
+                                    # sampling the rooms to be assigned
                                     for _ in range(num_stanze_da_assegnare):
                                         room = random.choice(room_tra_cui_scegliere)
                                         room_tra_cui_scegliere.remove(room)
                                         rooms_to_be_assigned[idx][id_shift].append(room)
            
                         else:
-                            # all'ultima infermiera toccano le stanze rimaste
+                            # the last nurse is assigned to all the remaining rooms
                             for id_shift, s in enumerate(problem_copy.nurses[nurse].working_shift):
                                 if s['day'] == day and s['shift'] == shift:
                                     rooms_to_be_assigned[idx][id_shift] = room_tra_cui_scegliere
@@ -400,6 +403,7 @@ class Problem():
                                     
                             
             state = State(dict_admission, problem_copy.nurses, rooms_to_be_assigned, problem_copy.days)
+            # checking if I created a feasible state
             if self.verifying_costraints(state):
                 non_ho_ancora_generate_un_feasible_state = False
         

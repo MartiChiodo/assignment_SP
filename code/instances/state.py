@@ -3,11 +3,15 @@ import math
 class State():
     
     def __init__(self, dict_admission, nurses, rooms_to_be_assigned, days):
-        # nurses is the dictionare of all the nurses 
+        # nurses is the dictionary of all the nurses 
+        
+        # all the essential info are contained in the two following attributes
         self.dict_admission = dict_admission
         self.room_to_be_assigned = rooms_to_be_assigned
+        
+        # the following attributes are just data structure easily interpretable and useful for computing the objective function
         self.nurses_shifts = self.creating_nurses_shifts_matrix(nurses, rooms_to_be_assigned, days)
-        self.scheduling_OTs = self.defyning_scheduling_OTs(dict_admission, days)
+        self.scheduling_OTs = self.defying_scheduling_OTs(dict_admission, days)
     
     def adding_matrix(self, matrix):
         self.patients_per_room = matrix
@@ -27,7 +31,7 @@ class State():
         
         return dict
     
-    def defyning_scheduling_OTs(self,dict_admission, days):
+    def defying_scheduling_OTs(self,dict_admission, days):
         # I am creating a dictionary of list: at each OT I associate its scheduling 
         dict = {}
         

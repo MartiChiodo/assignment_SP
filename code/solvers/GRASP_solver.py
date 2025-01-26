@@ -12,16 +12,13 @@ class GRASP_Solver():
         
     def get_neighborhood(self, state):
         neighborhoods = []
-        # state is the currente values of all the decisional variables
+        # state is the current value of all the decisional variables
         
-        # I. perturbazione stanze/date ammissioni pazienti controllando un minimo i vincoli
-        # II. scambiare le stanze tra le infermiere che lavorano nello stesso shift
-        # III. for optional patients nel vicinato metti anche l'opzione di non operarlo
-        
-        # I. perturbazione dict_admission
+        # I. perturbation dict_admission
         for id_pat, value in state.dict_admission.items():
+            # value = [id_ot, acceptance_date, id_room]
             if  value[1]  == -1:
-                # se il paziente non è stato ammesso posso solo ammetterlo
+                # if the patient have not been accepted I can assign him an acceptance_date and a room
                 for data in range(self.problem.patients[id_pat].surgery_release_day, self.problem.days):
                     new_dict = copy.deepcopy(state.dict_admission)
                     new_dict[id_pat][1] = data
@@ -31,7 +28,7 @@ class GRASP_Solver():
                         new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
                         neighborhoods.append(new_state)
             else:
-                # aggungo 1 alla data di ammissione
+                # adding 1 to the admission_date
                 new_dict = copy.deepcopy(state.dict_admission)
                 new_dict[id_pat][1] = value[1] + 1 
                 
@@ -39,7 +36,7 @@ class GRASP_Solver():
                     new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
                     neighborhoods.append(new_state)
                 
-                # tolgo 1 alla data di ammissione
+                # subtracting 1 to the admission_date
                 new_dict = copy.deepcopy(state.dict_admission)
                 new_dict[id_pat][1] = value[1]  - 1 
                 
@@ -47,23 +44,23 @@ class GRASP_Solver():
                     new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
                     neighborhoods.append(new_state)
                 
-                # se il paziente è non mandatory lo tolgo dall'ammissione
+                # if patient is not mandatory, I reject him
                 if self.problem.patients[id_pat].mandatory == False:
                     new_dict = copy.deepcopy(state.dict_admission)
                     new_dict[id_pat][1] = -1
                     new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
                     neighborhoods.append(new_state)
             
-            # scambio la stanza assegnata con un'altra stanza
+            # changes in room
             if not value[1] == -1:
                 if value[2] > 0 and value[2] < self.problem.hospital.n_rooms -1 :
-                    # stanza + 1
+                    # room + 1
                     new_dict = copy.deepcopy(state.dict_admission)
                     new_dict[id_pat][2] = value[2] + 1
                     new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
                     neighborhoods.append(new_state)
                     
-                    # stanza -1
+                    # room -1
                     new_dict = copy.deepcopy(state.dict_admission)
                     new_dict[id_pat][2] = value[2] - 1
                     new_state =State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
@@ -82,14 +79,15 @@ class GRASP_Solver():
                     new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
                     neighborhoods.append(new_state)
                 
-            # perturbazione sala operatoria --> ne scelgo una a caso da scambiare con quella attuale
+            # randomly changing the OT assigned to a patient
             set_OTs = set(self.problem.hospital.capacity_per_OT.keys())
             new_dict = copy.deepcopy(state.dict_admission)
             new_dict[id_pat][0] = random.choice(list(set_OTs))
             neighborhoods.append(new_state)
             
             
-        # II. perturbazione rooms_to_be_assigned --> ciclo sugli shift e se trovo due nurse che lavorano nello stesso turno scambio le loro stanze
+        # II. perturbation of  rooms_to_be_assigned 
+        # If I identify 2 nurses who are working on the same shift I swap the rooms assigned to them
         list_nurses = list(state.nurses_shifts.keys())
         for idx1 in range(len(list_nurses)):
             id_nurse1 = int(list_nurses[idx1][1:])
@@ -97,10 +95,10 @@ class GRASP_Solver():
                 id_nurse2 = int(list_nurses[idx2][1:])
                 for idx_shift in range(len(state.nurses_shifts[list_nurses[idx1]])):
                    if not (state.nurses_shifts[list_nurses[idx1]][idx_shift] == -1) and not (state.nurses_shifts[list_nurses[idx2]][idx_shift] == -1 ):
-                       # ho trovato due infermiere che lavorano nello stesso turno, scambio le stanze a loro associate
+                       # I found two nurses working on the same shift
                         new_state = copy.deepcopy(state)
                        
-                       # indice_1 e indice_2 mi indicano il turno dell'infermiera in room_to_be_assigned
+                       # indice_1 and indice_2 are the index of the nurses in the data structure room_to_be_assigned
                         for id, elem in enumerate(state.room_to_be_assigned[id_nurse1]):
                             if elem == state.nurses_shifts[list_nurses[idx1]][idx_shift]: indice_1 = id
                             
