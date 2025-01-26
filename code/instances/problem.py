@@ -31,6 +31,9 @@ class Problem():
         flag_feasible_state = True  # true if state is feasible
               
         # CHECKING IF STATE IS AMMISSIBLE BASED ON EXISTENCE OF OTs and ROOMS 
+        if  len(state.dict_admission.keys()) != len(self.patients.keys()):
+            return False
+        
         for key, value in state.dict_admission.items():
             if len(value) != 3:
                 raise ValueError('STATO NON AMMISSIBILE: la riga del pazione {key} ha una lunghezza diversa da 3.'.format(key=repr(key)))
@@ -38,8 +41,8 @@ class Problem():
             id_OT = value[0]
             id_ROOM = value[2]
             
-            if id_OT not in self.hospital.capacity_per_OT.keys():
-                raise ValueError('STATO NON AMMISSIBILE: la sala operatoria {id_OT} non esiste.'.format(id_OT=repr(id_OT)))
+            if id_OT not in self.hospital.capacity_per_OT.keys() and value[1] != -1:
+                raise ValueError('STATO NON AMMISSIBILE: la sala operatoria non esiste.')
 
             if id_ROOM not in range(self.hospital.n_rooms) and not id_ROOM == None:
                 raise ValueError('STATO NON AMMISSIBILE: la stanza post-ricovero numero {id_ROOM} non esiste.'.format(id_ROOM=repr(id_ROOM)))
@@ -132,12 +135,14 @@ class Problem():
             # list = [id_OT, acceptance_date, room_id]
             if self.people[id_patient].mandatory:
                 # for mandatory patients the surgery date should be in [release_date, due_date]
-                flag_feasible_state = list[1] <= self.people[id_patient].surgery_due_day
-                flag_feasible_state = list[1] >=  self.people[id_patient].surgery_release_day
+                if not (list[1] <= self.people[id_patient].surgery_due_day and list[1] >=  self.people[id_patient].surgery_release_day):
+                    flag_feasible_state = False
+                    return False
             else:
                 # for non mandatory we need to check that acceptance date is not further the last day or equal to -1
-                flag_feasible_state = list[1] <= self.hospital.days
-                flag_feasible_state = (list[1] >=  self.people[id_patient].surgery_release_day) or  list[1] == -1
+                if not list[1] <= self.hospital.days or not ((list[1] >=  self.people[id_patient].surgery_release_day) or list[1] == -1):
+                    flag_feasible_state = False
+                    return False
                 
             # subctracting surgery time from the dictionaries and checking if the components are still equal to/greater that 0
             id_tempo = list[1] 
@@ -219,13 +224,14 @@ class Problem():
         # penalties for surgical delays + unscheduled patients
         for id_pat, value in state.dict_admission.items():
             if value[1] == -1: weights_to_add['unscheduled_optional'] += 1
-            elif self.patients[id_pat].mandatory:
-                delay = value[1] - (self.patients[id_pat].surgery_release_day-1) 
+            elif self.patients[id_pat]:
+                delay = value[1] - (self.patients[id_pat].surgery_release_day) 
                 weights_to_add['patient_delay'] += max(delay,0)
                 
                 
-        # costs for openenig a OT + penalizing surgeon transfer
+        # costs for opening a OT + penalizing surgeon transfer
         list_set_ot_per_surgeon = {}
+        list_set_ot_per_day = [set() for _ in range(self.days)]
         surgeon_ids = self.surgeons.keys()
         for id_surg in surgeon_ids:
             list_set_ot_per_surgeon[id_surg] = [set() for _ in range(self.days)]
@@ -236,10 +242,11 @@ class Problem():
                 # prospetto_giornaliero is a list containing all the ids of the patients who are operated in the OT in a certain day
                 for id_pat in prospetto_giornaliero:
                     list_set_ot_per_surgeon[self.patients[id_pat].surgeon_id][day].add(id_OT)
-                    set_OTs.add(id_OT)
+                    list_set_ot_per_day[day].add(id_OT)
                 
-                # adding cost for opened OTs
-                weights_to_add['open_operating_theater'] +=  len(set_OTs)
+        # adding cost for opened OTs
+        for set_OT in list_set_ot_per_day:
+            weights_to_add['open_operating_theater'] +=  len(set_OT)
             
         # adding costs for surgeon transfers
         for elem in list_set_ot_per_surgeon.values():
@@ -257,7 +264,7 @@ class Problem():
                 if room_vec != -1:
                     sum_workload = 0
                     for room in room_vec:
-                        # id_shift = day*3 + {0;1;2} --> day = 1/3 * id_shift + 1/3*{0;1;2} in [1/3*id_shift; 1/3 *id_shift + 2/3]
+                        # id_shift = id_day*3 + {0;1;2} --> id_day = 1/3 * id_shift + 1/3*{0;1;2} in [1/3*id_shift; 1/3 *id_shift + 2/3]
                         id_pat_vec = state.patients_per_room[int(id_shift/3)][room]
                         for id_pat in id_pat_vec:
                             
@@ -276,7 +283,7 @@ class Problem():
                             
                     # end for on room_vec
                     
-                    # I have to dermine the max_load for a nurse by searching it in the dictionary
+                    # I have to derive the max_load for a nurse by searching it in the dictionary
                     list_shift = self.nurses[id_nurse].working_shift
                     for elem in list_shift:
                         idx_x = 3*elem['day'] + elem['shift']
@@ -357,7 +364,7 @@ class Problem():
                     room = None
                     
                     problem_copy.hospital.add_patient(room, data, problem_copy.patients[id_pat].length_of_stay, problem_copy.patients[id_pat].gender)    
-                    dict_admission[id_pat] = [random.choice(list(problem_copy.hospital.capacity_per_OT.keys())), data, room]
+                    dict_admission[id_pat] = [None, data, room]
             
             
             # Assignment of room to a nurse's shift

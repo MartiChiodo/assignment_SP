@@ -24,9 +24,13 @@ class GRASP_Solver():
                     new_dict[id_pat][1] = data
                     
                     for id_room in range(self.problem.hospital.n_rooms):
-                        new_dict[id_pat][2] = id_room
-                        new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
-                        neighborhoods.append(new_state)
+                        for id_OT in self.problem.hospital.capacity_per_OT.keys():
+                            new_dict[id_pat][2] = id_room
+                            new_dict[id_pat][0] = id_OT
+                            new_state = State(new_dict, self.problem.nurses, state.room_to_be_assigned, self.problem.days)
+                            neighborhoods.append(new_state)
+                        
+                        
             else:
                 # adding 1 to the admission_date
                 new_dict = copy.deepcopy(state.dict_admission)
@@ -172,17 +176,17 @@ class GRASP_Solver():
             ho_un_miglioramento_nel_vicinato = True
 
             while cont < iter_max_cost and ho_un_miglioramento_nel_vicinato:
-                ho_un_miglioramento_nel_vicinato = False
                 neighbors = self.get_neighborhood(current_solution)
 
                 cont += 1
 
+                ho_un_miglioramento_nel_vicinato = False
                 print('Ho creato un vicinato ', end=' --> ')
                 for idx, neig in enumerate(neighbors):
                     if problem.verifying_costraints(neig):
                         obj_fun = problem.objective_function(neig)
                         if obj_fun < current_best_f:
-                            ho_un_miglioramento_nel_vicinato = True
+                            ho_un_miglioramento_nel_vicinato = False
                             current_solution = neig
                             current_best_f = obj_fun
                             cont = 0
@@ -199,6 +203,10 @@ class GRASP_Solver():
 
                 # Update the best values for the plot
                 best_values.append(current_best_f)
+                
+            # Store the best results from this restart
+            best_solution_from_restart.append(current_solution)
+            best_f_from_restart.append(current_best_f)
 
         # Final plot update and adjustment
         plt.figure(figsize=(8, 6))

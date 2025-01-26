@@ -3,14 +3,15 @@ import numpy as np
 from instances import *
 from solvers import GRASP_Solver
 import random
+import os
+
 
 def main():
     
-    # impporting libraries
-    import os
-    import json 
-
-    file_path = "./data/ihtc2024_test_dataset/test03.json"
+    import json
+    import sys
+    
+    file_path = os.path.join(sys.path[0], "data", "ihtc2024_test_dataset", "test07.json")
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"The file {file_path} does not exist.")
     
@@ -41,15 +42,12 @@ def main():
     print('*********************************')
     print('SOLVING THE OPTIMIZATION PROBLEM')
     solver = GRASP_Solver(p, rnd_state)
-    best_solution, best_f = solver.solve(num_restart=3)
+    best_solution, best_f = solver.solve(num_restart=2)
 
     print('Best obj function = ', best_f)
 
     p.objective_function(best_solution, opt=1)
 
-
-    # writing the solution json file
-    import json
     
     # Data to be written
     dictionary = {}
@@ -111,7 +109,8 @@ def main():
     json_object = json.dumps(dictionary, indent=4)
     
     # Writing to sample.json
-    with open("results/solution.json", "w") as outfile:
+    file_path = os.path.join(sys.path[0], "results", "solution.json")
+    with open(file_path, "w") as outfile:
         outfile.write(json_object)
 
 
