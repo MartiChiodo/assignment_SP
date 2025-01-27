@@ -131,14 +131,14 @@ is the following.
     % Prima immagine
     \begin{subfigure}[t]{0.45\textwidth}  % Larghezza del 45% del testo
         \centering
-        \includegraphics[width=\textwidth]{img/1_restart.png}
+        \includegraphics[width=\textwidth]{img/1_restart.pdf}
         \caption{One restart allowed}
     \end{subfigure}
     \hspace{1cm} %spaziatura tra le immagini
     % Seconda immagine
     \begin{subfigure}[t]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{img/3_restarts.png}
+        \includegraphics[width=\textwidth]{img/3_restarts.pdf}
         \caption{Three restarts allowed}
     \end{subfigure}
     % Didascalia generale
@@ -163,14 +163,26 @@ The datasets are very different from one another, also differing in the length o
     \begin{tabular}{|c|c|c|c|c|}
         \hline
         \textbf{Test 1} & \textbf{Test 2} & \textbf{Test 3} & \textbf{Test 4} & \textbf{Test 5}  \\ \hline
-        5343 & 7417 & 11127 & 6382 & 16885   \\ \hline
+        5294 & 6904 & 10867 & 6921 & 16289   \\ \hline
         3177 & 1583 & 10184 & 2332 & 15713  \\ \hline
+        117.42 sec & 99.00 sec & 71.01 sec & 135.80 sec & 117.06 sec \\ \hline
     \end{tabular}
-    \caption{Comparison between the solution found by the GRASP solver (first row) and the actual minimum value of the objective function (second row).}
+    \caption{Comparison between the solution found by the GRASP solver (first row) and the actual minimum value of the objective function (second row). The third row contains the time of execution.}
+    \label{table:risultati}
 \end{table}
 
 Due to the fact that the GRASP solver belongs to the class of local optimizers, there is no guarantee of convergence to the global minimum: the algorithm can easily get stuck in local minima. Therefore, it is not surprising that the solutions found by our solver are always greater than the actual minimum value of the objective function.
 
 In addition, the performance of the GRASP solver is largely affected by the choice of the initial guess. In our code, the initial guess is generated without the aim of improving the objective function, and thus it is possible that the algorithm starts from points very far from the minimum, making it more difficult to reach it.
+
+The times of execution (shown in the third row of Table \ref{table:risultati}) are measured as the elapsed time from when the \verb+solve()+ function of the GRASP solver is called to when it returns the best state it has found. 
+These times are also significantly influenced by the quality of the neighborhood being explored. If the solver enters a promising neighborhood, it iterates for a longer time before reaching a minimum; on the other hand, if the initial guess is already very close to a local minimum, the search time can be very short.
+
+
+
+
+
+
+
 
 \end{document} 

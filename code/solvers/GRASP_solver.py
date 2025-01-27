@@ -222,7 +222,7 @@ class GRASP_Solver():
         plt.title("Optimization Progress")
 
         # # Save the plot as a PDF or PNG
-        # plt.savefig('optimization_plot.pdf', bbox_inches='tight')  # Save as PDF
+        plt.savefig('optimization_plot.pdf', bbox_inches='tight')  # Save as PDF
         
         # Show the plot
         plt.show()

@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1737907037.37903 "c:/Users/Lenovo/OneDrive/Desktop/POLITO/1° ANNO LM/Numerical Optimization for large scale problems and Stochastic Optimization/assignment_SP/report/main.tex" "main.pdf" "main" 1737907040.68816 0
+["pdflatex"] 1737972077.04733 "c:/Users/Lenovo/OneDrive/Desktop/POLITO/1° ANNO LM/Numerical Optimization for large scale problems and Stochastic Optimization/assignment_SP/report/main.tex" "main.pdf" "main" 1737972079.41817 0
   "C:/Users/Lenovo/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1737714077 82864 33af9636ee278c30beabba717010dc8f ""
   "C:/Users/Lenovo/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1729869834 24225519 9c15d9f6a29abd878cc115b22c58646b ""
   "C:/Users/Lenovo/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-ec.enc" 1256929440 2375 baa924870cfb487815765f9094cf3728 ""
@@ -160,13 +160,13 @@
   "C:/Users/Lenovo/AppData/Local/Programs/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "C:/Users/Lenovo/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1700127522 55487 80a65caedd3722f4c20a14a69e785d8f ""
   "C:/Users/Lenovo/AppData/Local/Programs/MiKTeX/tex/latex/xifthen/xifthen.sty" 1448274436 5689 1bfa68243e89a54479e7d0580773c57e ""
-  "c:/Users/Lenovo/OneDrive/Desktop/POLITO/1° ANNO LM/Numerical Optimization for large scale problems and Stochastic Optimization/assignment_SP/report/main.tex" 1737907036 12197 4a4061afe42191728869045bc7ab5313 ""
-  "img/1_restart.png" 1737905106 121855 e93f126d53aaca38d7f0aa44edea689f ""
-  "img/3_restarts.png" 1737905251 148681 f694ae1a24b249a22dfaf53b055807a8 ""
+  "c:/Users/Lenovo/OneDrive/Desktop/POLITO/1° ANNO LM/Numerical Optimization for large scale problems and Stochastic Optimization/assignment_SP/report/main.tex" 1737972076 12917 7752a90d63338cf0633990748b21689c ""
+  "img/1_restart.pdf" 1737971899 12840 7e5d9bf6e9c5ea315060cdc75079c061 ""
+  "img/3_restarts.pdf" 1737972034 13058 c7dbee6ebeed0592f7e7301baf5e7f7f ""
   "img/logo_polito_2021.jpg" 1737802192 1024395 534036d9fd285781e413fd1992dfceb3 ""
-  "main.aux" 1737907040 1705 f687b9b3a7169861b4aed34a44157d8d "pdflatex"
-  "main.out" 1737907040 754 6893fd800c28a001cfa0ca5e3a4c0876 "pdflatex"
-  "main.tex" 1737907036 12197 4a4061afe42191728869045bc7ab5313 ""
+  "main.aux" 1737972079 1990 9730c4d12e16666261406a6f313ef513 "pdflatex"
+  "main.out" 1737972079 754 6893fd800c28a001cfa0ca5e3a4c0876 "pdflatex"
+  "main.tex" 1737972076 12917 7752a90d63338cf0633990748b21689c ""
   "title.tex" 1737894335 627 3a738077fda943146030320ef33366b9 ""
   (generated)
   "main.aux"

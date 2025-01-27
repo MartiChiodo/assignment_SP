@@ -4,6 +4,7 @@ from instances import *
 from solvers import GRASP_Solver
 import random
 import os
+from timeit import default_timer as timer
 
 
 def main():
@@ -11,7 +12,7 @@ def main():
     import json
     import sys
     
-    file_path = os.path.join(sys.path[0], "data", "ihtc2024_test_dataset", "test06.json")
+    file_path = os.path.join(sys.path[0], "data", "ihtc2024_test_dataset", "test03.json")
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"The file {file_path} does not exist.")
     
@@ -35,16 +36,18 @@ def main():
     # the initial guess is generated randomly with a function
     random.seed(min(343310, 339268))
     rnd_state = p.generating_feasible_state()
-
-
+    
     # SOLVING THE OPT PROBLEM
     print('\n')
     print('*********************************')
     print('SOLVING THE OPTIMIZATION PROBLEM')
     solver = GRASP_Solver(p, rnd_state)
-    best_solution, best_f = solver.solve(num_restart=2)
+    start_timer = timer()
+    best_solution, best_f = solver.solve(num_restart=3)
+    end_timer = timer()
 
     print('Best obj function = ', best_f)
+    print('Elapsed time = ', end_timer-start_timer, ' sec')
 
     p.objective_function(best_solution, opt=1)
 
