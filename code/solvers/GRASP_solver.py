@@ -3,6 +3,7 @@ from instances.state import State
 import random
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from timeit import default_timer as timer
 
 
 class GRASP_Solver():
@@ -170,7 +171,10 @@ class GRASP_Solver():
             restart_points.append(len(best_values))
 
             # Generate a new random solution
+            start_time = timer()
             current_solution = problem.generating_feasible_state()
+            end_time = timer()
+            print("tempo generazione nuovo stato: ", end_time-start_time)
             current_best_f = problem.objective_function(current_solution)
             cont = 0
             ho_un_miglioramento_nel_vicinato = True
