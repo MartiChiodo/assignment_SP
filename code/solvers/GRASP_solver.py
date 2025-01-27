@@ -226,12 +226,9 @@ class GRASP_Solver():
         plt.title("Optimization Progress")
 
         # # Save the plot as a PDF or PNG
-        plt.savefig('optimization_plot.pdf', bbox_inches='tight')  # Save as PDF
-        
-        # Show the plot
-        plt.show()
+        # plt.savefig('optimization_plot.pdf', bbox_inches='tight')  # Save as PDF
 
         # Return the overall best solution
         best_solution = best_solution_from_restart[best_f_from_restart.index(min(best_f_from_restart))]
         best_f = min(best_f_from_restart)
-        return best_solution, best_f
+        return best_solution, best_f, plt

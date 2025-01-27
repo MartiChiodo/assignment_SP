@@ -43,14 +43,14 @@ def main():
     print('SOLVING THE OPTIMIZATION PROBLEM')
     solver = GRASP_Solver(p, rnd_state)
     start_timer = timer()
-    best_solution, best_f = solver.solve(num_restart=2)
+    best_solution, best_f, plot = solver.solve(num_restart=2)
     end_timer = timer()
 
     print('Best obj function = ', best_f)
     print('Elapsed time = ', end_timer-start_timer, ' sec')
 
     p.objective_function(best_solution, opt=1)
-
+    plot.show()
     
     # Data to be written
     dictionary = {}
@@ -112,7 +112,7 @@ def main():
     json_object = json.dumps(dictionary, indent=4)
     
     # Writing to sample.json
-    file_path = os.path.join(sys.path[0], "results", "solution.json")
+    file_path = os.path.join(sys.path[0], "results", "output_file.json")
     with open(file_path, "w") as outfile:
         outfile.write(json_object)
 
