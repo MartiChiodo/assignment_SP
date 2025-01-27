@@ -221,9 +221,8 @@ class GRASP_Solver():
         plt.ylabel("Objective Value")
         plt.title("Optimization Progress")
 
-        # Save the plot as a PDF or PNG
-        plt.savefig('optimization_plot.pdf', bbox_inches='tight')  # Save as PDF
-        plt.savefig('optimization_plot.png', dpi=300, bbox_inches='tight')  # Save as PNG
+        # # Save the plot as a PDF or PNG
+        # plt.savefig('optimization_plot.pdf', bbox_inches='tight')  # Save as PDF
         
         # Show the plot
         plt.show()

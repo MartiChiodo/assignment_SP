@@ -315,56 +315,58 @@ class Problem():
         while non_ho_ancora_generate_un_feasible_state:
             problem_copy = copy.deepcopy(self)
             
+            # We will accept first these patients which minimize the difference between due_date and release_date
+            mandatory_patients = {k: v for k, v in problem_copy.patients.items() if v.mandatory}
+            sorted_keys_mandatory = sorted(mandatory_patients.keys(), key=lambda k: mandatory_patients[k].surgery_due_day - mandatory_patients[k].surgery_release_day)
+            
             # random generation of the dictionary of admission, that is the acceptance date, the OT and the assigned room
             dict_admission = {}
-            for id_pat in problem_copy.patients.keys():
-                
-                # I begin by the mandatory patients
-                if problem_copy.patients[id_pat].mandatory:
+            for id_pat_mandatory in sorted_keys_mandatory:
+                # for sake of simplicity, we will consider generate an acceptance date only among the ones feasible
+                date_possibili = set(range(problem_copy.patients[id_pat_mandatory].surgery_release_day, problem_copy.patients[id_pat_mandatory].surgery_due_day+1))                       
+                # we remove the dates in which the assigned surgeon does not work
+                for data, value in enumerate(problem_copy.surgeons[problem_copy.patients[id_pat_mandatory].surgeon_id].max_surgery_time):
+                    if value == 0 : 
+                        try: date_possibili.remove(data)
+                        except: pass
 
-                    # for sake of simplicity, we will consider generate an acceptance date only among the ones feasible
-                    date_possibili = set(range(problem_copy.patients[id_pat].surgery_release_day, problem_copy.patients[id_pat].surgery_due_day+1))                       
-                    # we remove the dates in which the assigned surgeon does not work
-                    for data, value in enumerate(problem_copy.surgeons[problem_copy.patients[id_pat].surgeon_id].max_surgery_time):
-                        if value == 0 : 
-                            try: date_possibili.remove(data)
-                            except: pass
 
+                necessita_una_data = True
+                while len(list(date_possibili)) > 0 and necessita_una_data: 
                     # random generation
                     data = random.choice(list(date_possibili))
                     
                     # the room is assigned among those which does not already contains people of the opposite gender and still have capacity
-                    stanze_possibili  = set(range(problem_copy.hospital.n_rooms)) - set(problem_copy.patients[id_pat].incompatible_room_ids)
+                    stanze_possibili  = set(range(problem_copy.hospital.n_rooms)) - set(problem_copy.patients[id_pat_mandatory].incompatible_room_ids)
                     
-                    for id_data_controllo in range(data, min([data+problem_copy.patients[id_pat].length_of_stay, problem_copy.days])):
+                    for id_data_controllo in range(data, min([data+problem_copy.patients[id_pat_mandatory].length_of_stay, problem_copy.days])):
                         for id_room in range(problem_copy.hospital.n_rooms):
                             # togliamo le stanze piene
                             if problem_copy.hospital.avalaibiity_per_room[id_data_controllo][id_room] <= 0: 
                                 try: stanze_possibili.remove(id_room)
                                 except: pass
                             # togliamo le stanze che contengono persone del sesso opposto
-                            if not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == problem_copy.patients[id_pat].gender  and  not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == None:
+                            if not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == problem_copy.patients[id_pat_mandatory].gender  and  not problem_copy.hospital.sesso_per_room[id_data_controllo][id_room] == None:
                                 try: stanze_possibili.remove(id_room)
                                 except: pass
                         
                     # if stanze_possibili is an empty set, it won't be possible to random pick an elemnt out of it
                     try:
                         room = random.choice(list(stanze_possibili))  
+                        necessita_una_data = False
                     except:
+                        date_possibili.remove(data)
                         continue
                     
-                    problem_copy.hospital.add_patient(room, data, problem_copy.patients[id_pat].length_of_stay, problem_copy.patients[id_pat].gender)    
-                    dict_admission[id_pat] = [random.choice(list(problem_copy.hospital.capacity_per_OT.keys())), data, room]
-                
-            # for simplicity, non mandatory patients won't be admitted
-            for id_pat in problem_copy.patients.keys():
-                if not problem_copy.patients[id_pat].mandatory:
-        
-                    data = -1
-                    room = None
+                    problem_copy.hospital.add_patient(room, data, problem_copy.patients[id_pat_mandatory].length_of_stay, problem_copy.patients[id_pat_mandatory].gender)    
+                    dict_admission[id_pat_mandatory] = [random.choice(list(problem_copy.hospital.capacity_per_OT.keys())), data, room]
+            
+                # for simplicity, non mandatory patients won't be admitted
+            for id_pat_non_mandatory in (set(self.patients.keys()) - set(sorted_keys_mandatory)):
+                data = -1
+                room = None
                     
-                    problem_copy.hospital.add_patient(room, data, problem_copy.patients[id_pat].length_of_stay, problem_copy.patients[id_pat].gender)    
-                    dict_admission[id_pat] = [None, data, room]
+                dict_admission[id_pat_non_mandatory] = [None, data, room]
             
             
             # Assignment of room to a nurse's shift

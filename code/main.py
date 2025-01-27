@@ -11,7 +11,7 @@ def main():
     import json
     import sys
     
-    file_path = os.path.join(sys.path[0], "data", "ihtc2024_test_dataset", "test07.json")
+    file_path = os.path.join(sys.path[0], "data", "ihtc2024_test_dataset", "test06.json")
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"The file {file_path} does not exist.")
     
