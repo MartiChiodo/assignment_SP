@@ -131,14 +131,14 @@ is the following.
     % Prima immagine
     \begin{subfigure}[t]{0.45\textwidth}  % Larghezza del 45% del testo
         \centering
-        \includegraphics[width=\textwidth]{img/1_restart.pdf}
+        \includegraphics[width=\textwidth]{img/1_restart.png}
         \caption{One restart allowed}
     \end{subfigure}
     \hspace{1cm} %spaziatura tra le immagini
     % Seconda immagine
     \begin{subfigure}[t]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{img/3_restarts.pdf}
+        \includegraphics[width=\textwidth]{img/3_restarts.png}
         \caption{Three restarts allowed}
     \end{subfigure}
     % Didascalia generale
@@ -146,7 +146,7 @@ is the following.
     \label{GRASP}
 \end{figure}
 
-In the first case, the best value of the objective function found is 11466, while in the second case it is 11127.
+In the first case, the best value of the objective function found is 10998, while in the second case it is 10791.
 
 Red lines indicates when the method restarts from scratch, picking randomly a new feasible state. That's why the 
 value of the objective function can increase here, while it is always non-increasing in the other points, where exploration of the 
@@ -172,6 +172,22 @@ The datasets are very different from one another, also differing in the length o
 \end{table}
 
 Due to the fact that the GRASP solver belongs to the class of local optimizers, there is no guarantee of convergence to the global minimum: the algorithm can easily get stuck in local minima. Therefore, it is not surprising that the solutions found by our solver are always greater than the actual minimum value of the objective function.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|c|c|}
+    \hline
+    \textbf{age} & \textbf{skill} & \textbf{care} & \textbf{workload} & \textbf{open OT} & \textbf{surg trans} & \textbf{delay} & \textbf{opt pat}  \\ \hline
+    8 & 55 & 140 & 1 & 12 & 3 & 77 & 25  \\ \hline
+    10 & 113 & 121 & 10 & 15 & 4 & 94 & 17 \\ \hline
+    10 & 37 & 155 & 8 & 8 & 3 & 28 & 27  \\ \hline
+    10 & 148 & 176 & 34 & 25 & 15 & 81 & 19  \\ \hline
+    12 & 55 & 204 & 14 & 14 & 5 & 54 & 36  \\ \hline
+    \end{tabular}
+    \caption{On the rows the tests, on the columns number of soft constraints (respectively: mixed age groups in the rooms, nurses with lower skill level than needed, continuity of care, excessive nurses' workload,
+    opening cost for operating theaters, surgeon transfer, surgery delay for mandatory patients and unscheduled optional patient) violated by every solution.}
+    \label{instances}
+    \end{table}
 
 In addition, the performance of the GRASP solver is largely affected by the choice of the initial guess. In our code, the initial guess is generated without the aim of improving the objective function, and thus it is possible that the algorithm starts from points very far from the minimum, making it more difficult to reach it.
 
